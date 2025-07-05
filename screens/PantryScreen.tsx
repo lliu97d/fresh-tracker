@@ -1,42 +1,23 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import AddItemFAB from '../components/AddItemFAB';
-import HeaderBar from '../components/HeaderBar';
-
-const mockPantryItems = [
-  {
-    name: 'Soy Sauce',
-    quantity: '1 bottle',
-    category: 'Condiments',
-    expires: '3/14/2026',
-  },
-  {
-    name: 'Sea Salt',
-    quantity: '500g',
-    category: 'Spices',
-    expires: '12/31/2026',
-  },
-  {
-    name: 'Olive Oil',
-    quantity: '1L',
-    category: 'Oils',
-    expires: '11/10/2025',
-  },
-];
+import { useStore } from '../store';
 
 export default function PantryScreen({ navigation }: any) {
+  const { getFoodItemsByLocation } = useStore();
+  const pantryItems = getFoodItemsByLocation('pantry');
+
   return (
     <View style={{ flex: 1 }}>
-      <HeaderBar />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>Pantry & Seasonings</Text>
-        {mockPantryItems.map((item, idx) => (
-          <View key={idx} style={styles.card}>
+        {pantryItems.map((item) => (
+          <View key={item.id} style={styles.card}>
             <View style={styles.row}>
               <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.expiry}>Expires {item.expires}</Text>
+              <Text style={styles.expiry}>Expires {item.expirationDate.toLocaleDateString()}</Text>
             </View>
-            <Text style={styles.details}>{item.quantity} • {item.category}</Text>
+            <Text style={styles.details}>{item.quantity} {item.unit} • {item.category}</Text>
           </View>
         ))}
       </ScrollView>
