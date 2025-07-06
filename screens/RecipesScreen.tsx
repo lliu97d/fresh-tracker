@@ -228,12 +228,6 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 60,
   },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 0,
-    color: '#222',
-  },
   noteBox: {
     backgroundColor: '#e0f2fe',
     borderRadius: 10,
@@ -263,4 +257,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: 20,
   },
-}); 
+});
+
+ 

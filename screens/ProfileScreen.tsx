@@ -192,4 +192,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 12,
   },
-}); 
+});
+
+ 

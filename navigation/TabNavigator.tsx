@@ -47,12 +47,46 @@ export default function TabNavigator() {
           return <Ionicons name={iconName} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#22c55e',
-        tabBarInactiveTintColor: 'gray',
+        tabBarInactiveTintColor: '#6b7280',
+        tabBarStyle: {
+          backgroundColor: 'white',
+          borderTopWidth: 1,
+          borderTopColor: '#e5e7eb',
+          paddingTop: 8,
+          paddingBottom: 8,
+          height: 60,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+          marginTop: 4,
+        },
       })}
     >
-      <Tab.Screen name="Food" component={FoodStack} options={{ headerShown: false }} />
-      <Tab.Screen name="Recipes" component={RecipesStack} options={{ headerShown: false }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false }} />
+      <Tab.Screen 
+        name="Food" 
+        component={FoodStack} 
+        options={{ 
+          headerShown: false,
+          tabBarLabel: 'Food',
+        }} 
+      />
+      <Tab.Screen 
+        name="Recipes" 
+        component={RecipesStack} 
+        options={{ 
+          headerShown: false,
+          tabBarLabel: 'Recipes',
+        }} 
+      />
+      <Tab.Screen 
+        name="Profile" 
+        component={ProfileScreen} 
+        options={{ 
+          headerShown: false,
+          tabBarLabel: 'Profile',
+        }} 
+      />
     </Tab.Navigator>
   );
 } 
