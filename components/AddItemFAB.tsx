@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Modal, TouchableOpacity, Text, StyleSheet, Pressable, ViewStyle } from 'react-native';
+import { Modal, TouchableOpacity, Text, StyleSheet, Pressable, ViewStyle, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FAB from './FAB';
 
 interface AddItemFABProps {
@@ -10,6 +11,7 @@ interface AddItemFABProps {
 
 export default function AddItemFAB({ onScanBarcode, onManualEntry, style }: AddItemFABProps) {
   const [modalVisible, setModalVisible] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const handleOption = (option: 'scan' | 'manual') => {
     setModalVisible(false);
@@ -27,7 +29,7 @@ export default function AddItemFAB({ onScanBarcode, onManualEntry, style }: AddI
         onRequestClose={() => setModalVisible(false)}
       >
         <Pressable style={styles.overlay} onPress={() => setModalVisible(false)}>
-          <TouchableOpacity activeOpacity={1} style={styles.bottomSheet} onPress={() => {}}>
+          <TouchableOpacity activeOpacity={1} style={[styles.bottomSheet, { paddingBottom: Math.max(insets.bottom, 40) }]} onPress={() => {}}>
             <Text style={styles.sheetTitle}>Add New Item</Text>
             <TouchableOpacity style={styles.sheetButton} onPress={() => handleOption('scan')}>
               <Text style={styles.sheetButtonText}>Scan Barcode</Text>
@@ -53,7 +55,6 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
-    paddingBottom: 40,
     alignItems: 'center',
   },
   sheetTitle: {

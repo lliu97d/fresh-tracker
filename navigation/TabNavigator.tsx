@@ -1,6 +1,8 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import FoodScreen from '../screens/FreshFoodsScreen';
 import RecipesScreen from '../screens/RecipesScreen';
 import CalendarScreen from '../screens/CalendarScreen';
@@ -32,6 +34,8 @@ function RecipesStack() {
 }
 
 export default function TabNavigator() {
+  const insets = useSafeAreaInsets();
+  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -53,13 +57,16 @@ export default function TabNavigator() {
           borderTopWidth: 1,
           borderTopColor: '#e5e7eb',
           paddingTop: 8,
-          paddingBottom: 8,
-          height: 60,
+          paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom, 8) : 8,
+          height: Platform.OS === 'ios' ? 60 + insets.bottom : 60,
+          elevation: 0,
+          shadowOpacity: 0,
         },
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
           marginTop: 4,
+          marginBottom: Platform.OS === 'ios' ? 0 : 4,
         },
       })}
     >

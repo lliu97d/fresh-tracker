@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 
 interface FABProps {
@@ -8,8 +9,18 @@ interface FABProps {
 }
 
 export default function FAB({ onPress, style }: FABProps) {
+  const insets = useSafeAreaInsets();
+  
   return (
-    <TouchableOpacity style={[styles.fab, style]} onPress={onPress} activeOpacity={0.8}>
+    <TouchableOpacity 
+      style={[
+        styles.fab, 
+        { bottom: Math.max(insets.bottom, 32) + 60 }, // 60 is tab bar height
+        style
+      ]} 
+      onPress={onPress} 
+      activeOpacity={0.8}
+    >
       <Ionicons name="add" size={32} color="#fff" />
     </TouchableOpacity>
   );
@@ -19,7 +30,6 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 24,
-    bottom: 32,
     backgroundColor: '#2563eb',
     borderRadius: 32,
     width: 56,
