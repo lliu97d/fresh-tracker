@@ -152,6 +152,7 @@ export const useStore = create<AppState>((set, get) => ({
   addFoodItem: (item) => {
     const newItem: FoodItem = {
       ...item,
+      originalQuantity: item.quantity, // Set original quantity to initial quantity
       id: generateId(),
       addedDate: new Date(),
       status: calculateStatus(item.expirationDate),

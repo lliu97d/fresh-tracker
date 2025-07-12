@@ -9,7 +9,7 @@ import EmptyState from '../components/EmptyState';
 import { useStore } from '../store';
 
 export default function FoodScreen({ navigation }: any) {
-  const { foodItems, getFoodItemsByLocation } = useStore();
+  const { foodItems, getFoodItemsByLocation, deleteFoodItem, updateFoodItem } = useStore();
   const [selected, setSelected] = useState<'fresh' | 'pantry'>('fresh');
   const [statusFilter, setStatusFilter] = useState<FreshnessStatus | null>(null);
   
@@ -31,6 +31,18 @@ export default function FoodScreen({ navigation }: any) {
 
   const handleStatusFilter = (status: FreshnessStatus) => {
     setStatusFilter(statusFilter === status ? null : status);
+  };
+
+  const handleDeleteItem = (id: string) => {
+    deleteFoodItem(id);
+  };
+
+  const handleUpdateQuantity = (id: string, newQuantity: number) => {
+    // Find the item and update its quantity
+    const item = foodItems.find(item => item.id === id);
+    if (item) {
+      updateFoodItem(id, { quantity: newQuantity });
+    }
   };
 
   const clearFilter = () => {
@@ -95,25 +107,25 @@ export default function FoodScreen({ navigation }: any) {
             >
               <XStack space="$3" paddingHorizontal="$5">
                 <Card
-                  backgroundColor={statusFilter === 'expiring' ? '#FFEBEE' : '#FFF5F5'}
-                  borderColor={statusFilter === 'expiring' ? '#EF5350' : '#FFCDD2'}
-                  borderWidth={statusFilter === 'expiring' ? 2 : 1}
+                  backgroundColor={statusFilter === 'fresh' ? '#E8F5E8' : '#F1F8E9'}
+                  borderColor={statusFilter === 'fresh' ? '#81C784' : '#C8E6C9'}
+                  borderWidth={statusFilter === 'fresh' ? 2 : 1}
                   borderRadius="$4"
                   padding="$3"
                   alignItems="center"
-                  onPress={() => handleStatusFilter('expiring')}
-                  pressStyle={{ backgroundColor: '#FFEBEE' }}
+                  onPress={() => handleStatusFilter('fresh')}
+                  pressStyle={{ backgroundColor: '#E8F5E8' }}
                   minWidth={100}
                 >
-                  <AlertTriangle size={20} color="#EF5350" marginBottom="$2" />
+                  <CheckCircle size={20} color="#81C784" marginBottom="$2" />
                   <Text fontSize="$6" fontWeight="bold" color="#212121">
-                    {summary.expiring}
+                    {summary.fresh}
                   </Text>
                   <Text fontSize="$2" color="#424242" textAlign="center">
-                    Expiring Soon
+                    Fresh & Good
                   </Text>
                 </Card>
-                
+
                 <Card
                   backgroundColor={statusFilter === 'watch' ? '#FFF3E0' : '#FFF8E1'}
                   borderColor={statusFilter === 'watch' ? '#FFB74D' : '#FFCC80'}
@@ -135,22 +147,22 @@ export default function FoodScreen({ navigation }: any) {
                 </Card>
                 
                 <Card
-                  backgroundColor={statusFilter === 'fresh' ? '#E8F5E8' : '#F1F8E9'}
-                  borderColor={statusFilter === 'fresh' ? '#81C784' : '#C8E6C9'}
-                  borderWidth={statusFilter === 'fresh' ? 2 : 1}
+                  backgroundColor={statusFilter === 'expiring' ? '#FFEBEE' : '#FFF5F5'}
+                  borderColor={statusFilter === 'expiring' ? '#EF5350' : '#FFCDD2'}
+                  borderWidth={statusFilter === 'expiring' ? 2 : 1}
                   borderRadius="$4"
                   padding="$3"
                   alignItems="center"
-                  onPress={() => handleStatusFilter('fresh')}
-                  pressStyle={{ backgroundColor: '#E8F5E8' }}
+                  onPress={() => handleStatusFilter('expiring')}
+                  pressStyle={{ backgroundColor: '#FFEBEE' }}
                   minWidth={100}
                 >
-                  <CheckCircle size={20} color="#81C784" marginBottom="$2" />
+                  <AlertTriangle size={20} color="#EF5350" marginBottom="$2" />
                   <Text fontSize="$6" fontWeight="bold" color="#212121">
-                    {summary.fresh}
+                    {summary.expiring}
                   </Text>
                   <Text fontSize="$2" color="#424242" textAlign="center">
-                    Fresh & Good
+                    Expiring Soon
                   </Text>
                 </Card>
                 
@@ -182,14 +194,18 @@ export default function FoodScreen({ navigation }: any) {
                 filteredFreshItems.map((item) => (
                   <ItemCard 
                     key={item.id}
+                    id={item.id}
                     name={item.name}
-                    quantity={`${item.quantity} ${item.unit}`}
+                    quantity={item.quantity}
+                    originalQuantity={item.originalQuantity}
+                    unit={item.unit}
                     category={item.category}
                     calories={`${item.calories || 0} per 100g`}
                     expiresInDays={Math.ceil((item.expirationDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}
                     status={item.status}
                     onViewRecipes={() => {}}
-                    onUpdateQty={() => {}}
+                    onUpdateQty={handleUpdateQuantity}
+                    onDelete={handleDeleteItem}
                   />
                 ))
               ) : (

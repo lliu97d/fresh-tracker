@@ -21,6 +21,7 @@ export interface FoodItem {
   id: string;
   name: string;
   quantity: number;
+  originalQuantity: number;  // Track initial quantity for percentage calculations
   unit: string;
   category: FoodCategory;
   calories?: number;
