@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { Card, Text, XStack, YStack, Button, Stack } from 'tamagui';
+import { Calendar, Flame, Package } from '@tamagui/lucide-icons';
 
-export type FreshnessStatus = 'fresh' | 'watch' | 'expiring';
+export type FreshnessStatus = 'fresh' | 'watch' | 'expiring' | 'expired';
 
 interface ItemCardProps {
   name: string;
@@ -14,15 +15,35 @@ interface ItemCardProps {
   onUpdateQty?: () => void;
 }
 
-const statusColors = {
-  fresh: '#d1fae5', // green
-  watch: '#fef9c3', // yellow
-  expiring: '#fee2e2', // red
-};
-const borderColors = {
-  fresh: '#34d399',
-  watch: '#fde047',
-  expiring: '#f87171',
+const statusConfig = {
+  fresh: {
+    backgroundColor: '$green2',
+    borderColor: '$green8',
+    textColor: '$green11',
+    iconColor: '$green9',
+    badgeColor: '$green9',
+  },
+  watch: {
+    backgroundColor: '$yellow2',
+    borderColor: '$yellow8',
+    textColor: '$yellow11',
+    iconColor: '$yellow9',
+    badgeColor: '$yellow9',
+  },
+  expiring: {
+    backgroundColor: '$red2',
+    borderColor: '$red8',
+    textColor: '$red11',
+    iconColor: '$red9',
+    badgeColor: '$red9',
+  },
+  expired: {
+    backgroundColor: '$gray2',
+    borderColor: '$gray8',
+    textColor: '$gray11',
+    iconColor: '$gray9',
+    badgeColor: '$gray9',
+  },
 };
 
 export default function ItemCard({
@@ -35,82 +56,99 @@ export default function ItemCard({
   onViewRecipes,
   onUpdateQty,
 }: ItemCardProps) {
+  const config = statusConfig[status];
+  
   let statusText = '';
   if (status === 'fresh') statusText = 'Fresh & Good';
   else if (status === 'watch') statusText = 'Watch Closely';
-  else statusText = 'Expiring Soon';
+  else if (status === 'expiring') statusText = 'Expiring Soon';
+  else statusText = 'Expired';
 
   return (
-    <View style={[styles.card, { backgroundColor: statusColors[status], borderColor: borderColors[status] }]}> 
-      <View style={styles.headerRow}>
-        <Text style={styles.name}>{name}</Text>
-        <Text style={styles.expiry}>Expires in <Text style={{ fontWeight: 'bold' }}>{expiresInDays} days</Text></Text>
-      </View>
-      <Text style={styles.details}>{quantity} • {category}</Text>
-      <Text style={styles.calories}>🔥 {calories}</Text>
-      <View style={styles.buttonRow}>
-        <TouchableOpacity style={styles.button} onPress={onViewRecipes}>
-          <Text style={styles.buttonText}>View Recipes</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.button} onPress={onUpdateQty}>
-          <Text style={styles.buttonText}>Update Qty</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-}
+    <Card
+      elevate
+      size="$4"
+      bordered
+      scale={0.9}
+      hoverStyle={{ scale: 0.95 }}
+      pressStyle={{ scale: 0.85 }}
+      backgroundColor={config.backgroundColor}
+      borderColor={config.borderColor}
+      marginBottom="$4"
+      padding="$4"
+      borderRadius="$4"
+    >
+      <YStack space="$3">
+        {/* Header */}
+        <XStack justifyContent="space-between" alignItems="center">
+          <YStack flex={1}>
+            <Text fontSize="$6" fontWeight="bold" color="$color">
+              {name}
+            </Text>
+            <Text fontSize="$3" color="$gray10" marginTop="$1">
+              {quantity} • {category}
+            </Text>
+          </YStack>
+          <Text
+            backgroundColor={config.badgeColor}
+            color="white"
+            fontSize="$2"
+            fontWeight="600"
+            paddingHorizontal="$2"
+            paddingVertical="$1"
+            borderRadius="$2"
+          >
+            {statusText}
+          </Text>
+        </XStack>
 
-const styles = StyleSheet.create({
-  card: {
-    borderWidth: 2,
-    borderRadius: 16,
-    padding: 18,
-    marginBottom: 18,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  name: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  expiry: {
-    fontSize: 14,
-    color: '#222',
-  },
-  details: {
-    fontSize: 15,
-    color: '#444',
-    marginBottom: 4,
-  },
-  calories: {
-    fontSize: 14,
-    color: '#f87171',
-    marginBottom: 10,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 8,
-  },
-  button: {
-    flex: 1,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 8,
-    paddingVertical: 10,
-    alignItems: 'center',
-    marginHorizontal: 4,
-  },
-  buttonText: {
-    fontSize: 15,
-    fontWeight: '500',
-    color: '#2563eb',
-  },
-}); 
+        {/* Details */}
+        <XStack space="$3" alignItems="center">
+          <Stack space="$1" alignItems="center" flexDirection="row">
+            <Calendar size={16} color={config.iconColor} />
+            <Text fontSize="$3" color={config.textColor} fontWeight="600">
+              {expiresInDays} days
+            </Text>
+          </Stack>
+          
+          <Stack space="$1" alignItems="center" flexDirection="row">
+            <Flame size={16} color="$orange9" />
+            <Text fontSize="$3" color="$gray11">
+              {calories}
+            </Text>
+          </Stack>
+        </XStack>
+
+        {/* Actions */}
+        <XStack space="$2" marginTop="$2">
+          <Button
+            flex={1}
+            size="$3"
+            variant="outlined"
+            borderColor="$blue8"
+            color="$blue11"
+            backgroundColor="transparent"
+            onPress={onViewRecipes}
+            pressStyle={{ backgroundColor: '$blue2' }}
+          >
+            <Package size={16} marginRight="$1" />
+            <Text fontSize="$3" fontWeight="600">Recipes</Text>
+          </Button>
+          
+          <Button
+            flex={1}
+            size="$3"
+            variant="outlined"
+            borderColor="$gray8"
+            color="$gray11"
+            backgroundColor="transparent"
+            onPress={onUpdateQty}
+            pressStyle={{ backgroundColor: '$gray2' }}
+          >
+            <Text fontSize="$3" fontWeight="600">Update Qty</Text>
+          </Button>
+        </XStack>
+      </YStack>
+    </Card>
+  );
+} 

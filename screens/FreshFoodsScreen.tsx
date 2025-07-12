@@ -1,13 +1,17 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { ScrollView } from 'react-native';
+import { View, Text, YStack, XStack, Button, Card, Stack } from 'tamagui';
+import { AlertTriangle, CheckCircle, Clock } from '@tamagui/lucide-icons';
 import AddItemFAB from '../components/AddItemFAB';
 import ItemCard, { FreshnessStatus } from '../components/ItemCard';
 import HeaderBar from '../components/HeaderBar';
+import EmptyState from '../components/EmptyState';
 import { useStore } from '../store';
 
 export default function FoodScreen({ navigation }: any) {
   const { foodItems, getFoodItemsByLocation } = useStore();
   const [selected, setSelected] = useState<'fresh' | 'pantry'>('fresh');
+  const [statusFilter, setStatusFilter] = useState<FreshnessStatus | null>(null);
   
   const freshItems = getFoodItemsByLocation('fresh');
   const pantryItems = getFoodItemsByLocation('pantry');
@@ -17,165 +21,244 @@ export default function FoodScreen({ navigation }: any) {
       acc[item.status]++;
       return acc;
     },
-    { fresh: 0, watch: 0, expiring: 0 }
+    { fresh: 0, watch: 0, expiring: 0, expired: 0 }
   );
+
+  // Filter items based on status filter
+  const filteredFreshItems = statusFilter 
+    ? freshItems.filter(item => item.status === statusFilter)
+    : freshItems;
+
+  const handleStatusFilter = (status: FreshnessStatus) => {
+    setStatusFilter(statusFilter === status ? null : status);
+  };
+
+  const clearFilter = () => {
+    setStatusFilter(null);
+  };
 
   return (
     <View style={{ flex: 1 }}>
       <HeaderBar title="Food" />
+      
       {/* Segmented Control */}
-      <View style={styles.segmentedContainer}>
-        <TouchableOpacity
-          style={[styles.segment, selected === 'fresh' && styles.segmentSelected]}
-          onPress={() => setSelected('fresh')}
+      <YStack paddingHorizontal="$5" paddingTop="$4" paddingBottom="$3">
+        <Card
+          backgroundColor="$gray3"
+          borderRadius="$4"
+          padding="$1"
+          borderColor="$gray6"
+          borderWidth={1}
         >
-          <Text style={[styles.segmentText, selected === 'fresh' && styles.segmentTextSelected]}>Fresh Foods</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.segment, selected === 'pantry' && styles.segmentSelected]}
-          onPress={() => setSelected('pantry')}
-        >
-          <Text style={[styles.segmentText, selected === 'pantry' && styles.segmentTextSelected]}>Pantry</Text>
-        </TouchableOpacity>
-      </View>
+          <XStack>
+            <Button
+              flex={1}
+              size="$3"
+              backgroundColor={selected === 'fresh' ? '$primary' : 'transparent'}
+              color={selected === 'fresh' ? 'white' : '$gray11'}
+              fontWeight={selected === 'fresh' ? 'bold' : '500'}
+              borderRadius="$3"
+              onPress={() => setSelected('fresh')}
+              pressStyle={{ backgroundColor: selected === 'fresh' ? '$primary' : '$gray4' }}
+            >
+              Fresh Foods
+            </Button>
+            <Button
+              flex={1}
+              size="$3"
+              backgroundColor={selected === 'pantry' ? '$primary' : 'transparent'}
+              color={selected === 'pantry' ? 'white' : '$gray11'}
+              fontWeight={selected === 'pantry' ? 'bold' : '500'}
+              borderRadius="$3"
+              onPress={() => setSelected('pantry')}
+              pressStyle={{ backgroundColor: selected === 'pantry' ? '$primary' : '$gray4' }}
+            >
+              Pantry
+            </Button>
+          </XStack>
+        </Card>
+      </YStack>
+
       {/* Content */}
       {selected === 'fresh' ? (
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.title}>Fresh Items</Text>
-          <View style={styles.summaryRow}>
-            <View style={[styles.summaryBox, { backgroundColor: '#fee2e2' }]}> 
-              <Text style={styles.summaryNum}>{summary.expiring}</Text>
-              <Text style={styles.summaryLabel}>Expiring Soon</Text>
-            </View>
-            <View style={[styles.summaryBox, { backgroundColor: '#fef9c3' }]}> 
-              <Text style={styles.summaryNum}>{summary.watch}</Text>
-              <Text style={styles.summaryLabel}>Watch Closely</Text>
-            </View>
-            <View style={[styles.summaryBox, { backgroundColor: '#d1fae5' }]}> 
-              <Text style={styles.summaryNum}>{summary.fresh}</Text>
-              <Text style={styles.summaryLabel}>Fresh & Good</Text>
-            </View>
-          </View>
-          {freshItems.map((item) => (
-            <ItemCard 
-              key={item.id}
-              name={item.name}
-              quantity={`${item.quantity} ${item.unit}`}
-              category={item.category}
-              calories={`${item.calories || 0} per 100g`}
-              expiresInDays={Math.ceil((item.expirationDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}
-              status={item.status}
-              onViewRecipes={() => {}}
-              onUpdateQty={() => {}}
-            />
-          ))}
+        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
+          <YStack space="$4">
+            <Text fontSize="$7" fontWeight="bold" color="$color">
+              Fresh Items
+            </Text>
+            
+            {/* Summary Cards */}
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 0 }}
+            >
+              <XStack space="$3" paddingHorizontal="$5">
+                <Card
+                  backgroundColor={statusFilter === 'expiring' ? '#FFEBEE' : '#FFF5F5'}
+                  borderColor={statusFilter === 'expiring' ? '#EF5350' : '#FFCDD2'}
+                  borderWidth={statusFilter === 'expiring' ? 2 : 1}
+                  borderRadius="$4"
+                  padding="$3"
+                  alignItems="center"
+                  onPress={() => handleStatusFilter('expiring')}
+                  pressStyle={{ backgroundColor: '#FFEBEE' }}
+                  minWidth={100}
+                >
+                  <AlertTriangle size={20} color="#EF5350" marginBottom="$2" />
+                  <Text fontSize="$6" fontWeight="bold" color="#212121">
+                    {summary.expiring}
+                  </Text>
+                  <Text fontSize="$2" color="#424242" textAlign="center">
+                    Expiring Soon
+                  </Text>
+                </Card>
+                
+                <Card
+                  backgroundColor={statusFilter === 'watch' ? '#FFF3E0' : '#FFF8E1'}
+                  borderColor={statusFilter === 'watch' ? '#FFB74D' : '#FFCC80'}
+                  borderWidth={statusFilter === 'watch' ? 2 : 1}
+                  borderRadius="$4"
+                  padding="$3"
+                  alignItems="center"
+                  onPress={() => handleStatusFilter('watch')}
+                  pressStyle={{ backgroundColor: '#FFF3E0' }}
+                  minWidth={100}
+                >
+                  <Clock size={20} color="#FFB74D" marginBottom="$2" />
+                  <Text fontSize="$6" fontWeight="bold" color="#212121">
+                    {summary.watch}
+                  </Text>
+                  <Text fontSize="$2" color="#424242" textAlign="center">
+                    Watch Closely
+                  </Text>
+                </Card>
+                
+                <Card
+                  backgroundColor={statusFilter === 'fresh' ? '#E8F5E8' : '#F1F8E9'}
+                  borderColor={statusFilter === 'fresh' ? '#81C784' : '#C8E6C9'}
+                  borderWidth={statusFilter === 'fresh' ? 2 : 1}
+                  borderRadius="$4"
+                  padding="$3"
+                  alignItems="center"
+                  onPress={() => handleStatusFilter('fresh')}
+                  pressStyle={{ backgroundColor: '#E8F5E8' }}
+                  minWidth={100}
+                >
+                  <CheckCircle size={20} color="#81C784" marginBottom="$2" />
+                  <Text fontSize="$6" fontWeight="bold" color="#212121">
+                    {summary.fresh}
+                  </Text>
+                  <Text fontSize="$2" color="#424242" textAlign="center">
+                    Fresh & Good
+                  </Text>
+                </Card>
+                
+                <Card
+                  backgroundColor={statusFilter === 'expired' ? '#F5F5F5' : '#FAFAFA'}
+                  borderColor={statusFilter === 'expired' ? '#9E9E9E' : '#E0E0E0'}
+                  borderWidth={statusFilter === 'expired' ? 2 : 1}
+                  borderRadius="$4"
+                  padding="$3"
+                  alignItems="center"
+                  onPress={() => handleStatusFilter('expired')}
+                  pressStyle={{ backgroundColor: '#F5F5F5' }}
+                  minWidth={100}
+                >
+                  <AlertTriangle size={20} color="#9E9E9E" marginBottom="$2" />
+                  <Text fontSize="$6" fontWeight="bold" color="#212121">
+                    {summary.expired}
+                  </Text>
+                  <Text fontSize="$2" color="#424242" textAlign="center">
+                    Expired
+                  </Text>
+                </Card>
+              </XStack>
+            </ScrollView>
+
+            {/* Food Items */}
+            <YStack space="$3">
+              {filteredFreshItems.length > 0 ? (
+                filteredFreshItems.map((item) => (
+                  <ItemCard 
+                    key={item.id}
+                    name={item.name}
+                    quantity={`${item.quantity} ${item.unit}`}
+                    category={item.category}
+                    calories={`${item.calories || 0} per 100g`}
+                    expiresInDays={Math.ceil((item.expirationDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}
+                    status={item.status}
+                    onViewRecipes={() => {}}
+                    onUpdateQty={() => {}}
+                  />
+                ))
+              ) : (
+                <EmptyState
+                  title={statusFilter ? `No ${statusFilter === 'expired' ? 'Expired' :
+                                       statusFilter === 'expiring' ? 'Expiring' : 
+                                       statusFilter === 'watch' ? 'Watch' : 'Fresh'} Items` : "No Fresh Items"}
+                  message={statusFilter ? 
+                    `You don't have any items that are ${statusFilter === 'expired' ? 'expired' :
+                     statusFilter === 'expiring' ? 'expiring soon' : 
+                     statusFilter === 'watch' ? 'needing attention' : 'fresh and good'}.` :
+                    "You haven't added any fresh food items yet. Start by scanning a barcode or manually entering an item."
+                  }
+                  actionText="Add Your First Item"
+                  onAction={() => navigation.navigate('ManualEntry')}
+                />
+              )}
+            </YStack>
+          </YStack>
         </ScrollView>
       ) : (
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          <Text style={styles.title}>Pantry & Seasonings</Text>
-          {pantryItems.map((item) => (
-            <View key={item.id} style={styles.pantryCard}>
-              <View style={styles.row}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.expiry}>Expires {item.expirationDate.toLocaleDateString()}</Text>
-              </View>
-              <Text style={styles.details}>{item.quantity} {item.unit} • {item.category}</Text>
-            </View>
-          ))}
+        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
+          <YStack space="$4">
+            <Text fontSize="$7" fontWeight="bold" color="$color">
+              Pantry & Seasonings
+            </Text>
+            
+            <YStack space="$3">
+              {pantryItems.length > 0 ? (
+                pantryItems.map((item) => (
+                  <Card
+                    key={item.id}
+                    backgroundColor="$gray2"
+                    borderColor="$gray6"
+                    borderWidth={1}
+                    borderRadius="$4"
+                    padding="$4"
+                    marginBottom="$3"
+                  >
+                    <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
+                      <Text fontSize="$5" fontWeight="bold" color="$color">
+                        {item.name}
+                      </Text>
+                      <Text fontSize="$3" color="$gray10">
+                        Expires {item.expirationDate.toLocaleDateString()}
+                      </Text>
+                    </XStack>
+                    <Text fontSize="$4" color="$gray11">
+                      {item.quantity} {item.unit} • {item.category}
+                    </Text>
+                  </Card>
+                ))
+              ) : (
+                <EmptyState
+                  title="No Pantry Items"
+                  message="Your pantry is empty. Add some non-perishable items to keep track of your supplies."
+                  actionText="Add Pantry Item"
+                  onAction={() => navigation.navigate('ManualEntry')}
+                />
+              )}
+            </YStack>
+          </YStack>
         </ScrollView>
       )}
+      
       <AddItemFAB
         onScanBarcode={() => navigation.navigate('BarcodeScanner')}
         onManualEntry={() => navigation.navigate('ManualEntry')}
       />
     </View>
   );
-}
-
-const styles = StyleSheet.create({
-  segmentedContainer: {
-    flexDirection: 'row',
-    marginTop: 18,
-    marginHorizontal: 20,
-    marginBottom: 8,
-    backgroundColor: '#f3f4f6',
-    borderRadius: 10,
-    overflow: 'hidden',
-  },
-  segment: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  segmentSelected: {
-    backgroundColor: '#22c55e',
-  },
-  segmentText: {
-    fontSize: 16,
-    color: '#222',
-    fontWeight: '500',
-  },
-  segmentTextSelected: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 100,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    marginBottom: 18,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 18,
-  },
-  summaryBox: {
-    flex: 1,
-    borderRadius: 14,
-    alignItems: 'center',
-    paddingVertical: 12,
-    marginHorizontal: 4,
-  },
-  summaryNum: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#b91c1c',
-  },
-  summaryLabel: {
-    fontSize: 13,
-    color: '#444',
-  },
-  pantryCard: {
-    backgroundColor: '#f3f4f6',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 3,
-    shadowOffset: { width: 0, height: 1 },
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  name: {
-    fontSize: 17,
-    fontWeight: 'bold',
-  },
-  expiry: {
-    fontSize: 13,
-    color: '#444',
-  },
-  details: {
-    fontSize: 15,
-    color: '#555',
-  },
-}); 
+} 

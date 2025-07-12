@@ -24,6 +24,7 @@ const calculateStatus = (expirationDate: Date): FreshnessStatus => {
   const diffTime = expirationDate.getTime() - now.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
+  if (diffDays < 0) return 'expired';
   if (diffDays <= 1) return 'expiring';
   if (diffDays <= 3) return 'watch';
   return 'fresh';

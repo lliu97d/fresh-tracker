@@ -1,6 +1,6 @@
 // Core data types for FreshTracker app
 
-export type FreshnessStatus = 'fresh' | 'watch' | 'expiring';
+export type FreshnessStatus = 'fresh' | 'watch' | 'expiring' | 'expired';
 
 export type FoodCategory = 
   | 'Vegetables' 
