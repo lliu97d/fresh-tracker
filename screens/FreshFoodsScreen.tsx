@@ -163,7 +163,7 @@ export default function FoodScreen({ navigation }: any) {
       </View>
 
       {/* Minimal Borderless Filter Bar with Counts, Horizontally Scrollable */}
-      <YStack marginTop={4} marginBottom={12}>
+      <YStack marginTop={4} marginBottom={8}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }}>
           <XStack space="$2" alignItems="center" justifyContent="center">
             {[
@@ -230,12 +230,11 @@ export default function FoodScreen({ navigation }: any) {
             })}
           </XStack>
         </ScrollView>
-        <YStack height={1} backgroundColor="#F0F1F2" marginTop={12} />
       </YStack>
 
       {/* Content */}
       {selected === 'fresh' ? (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100 }}>
           <YStack space="$4">
 
             {/* Food Items */}
@@ -276,7 +275,7 @@ export default function FoodScreen({ navigation }: any) {
           </YStack>
         </ScrollView>
       ) : (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100 }}>
           <YStack space="$4">
             
             <YStack space="$3">

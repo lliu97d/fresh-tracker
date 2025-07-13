@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Platform, ScrollView, Alert, KeyboardAvoidingView } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Platform, ScrollView, Alert, KeyboardAvoidingView, Modal, FlatList, findNodeHandle } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useStore } from '../store';
 import { FoodCategory } from '../store/types';
 import { foodDatabase, FoodProduct } from '../services/foodDatabase';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { ChevronDown } from '@tamagui/lucide-icons';
 
 const categories: FoodCategory[] = ['Vegetables', 'Meat', 'Dairy', 'Fruits', 'Bakery', 'Other'];
 const units = ['pcs', 'g', 'kg', 'ml', 'L', 'lb', 'oz', 'bag', 'box'];
@@ -22,6 +23,14 @@ export default function ManualEntryScreen({ navigation, onRequestClose }: any) {
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<FoodProduct[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  // Add state for dropdowns
+  const [unitDropdownVisible, setUnitDropdownVisible] = useState(false);
+  const [categoryDropdownVisible, setCategoryDropdownVisible] = useState(false);
+  // Add ref and position state for dropdowns
+  const unitButtonRef = useRef<View>(null);
+  const categoryButtonRef = useRef<View>(null);
+  const [unitDropdownPos, setUnitDropdownPos] = useState({ top: 0, left: 0, width: 0 });
+  const [categoryDropdownPos, setCategoryDropdownPos] = useState({ top: 0, left: 0, width: 0 });
 
   const onSave = () => {
     const parsedQuantity = parseFloat(quantity) || 0;
@@ -76,6 +85,25 @@ export default function ManualEntryScreen({ navigation, onRequestClose }: any) {
     setShowDate(Platform.OS === 'ios');
     if (selectedDate) {
       setExpiration(selectedDate);
+    }
+  };
+
+  const showUnitDropdown = () => {
+    const node = findNodeHandle(unitButtonRef.current);
+    if (node && unitButtonRef.current) {
+      unitButtonRef.current.measureInWindow((x: number, y: number, width: number, height: number) => {
+        setUnitDropdownPos({ top: y + height, left: x, width });
+        setUnitDropdownVisible(true);
+      });
+    }
+  };
+  const showCategoryDropdown = () => {
+    const node = findNodeHandle(categoryButtonRef.current);
+    if (node && categoryButtonRef.current) {
+      categoryButtonRef.current.measureInWindow((x: number, y: number, width: number, height: number) => {
+        setCategoryDropdownPos({ top: y + height, left: x, width });
+        setCategoryDropdownVisible(true);
+      });
     }
   };
 
@@ -157,35 +185,75 @@ export default function ManualEntryScreen({ navigation, onRequestClose }: any) {
               </View>
               <View style={styles.halfWidth}>
                 <Text style={styles.label}>Unit</Text>
-                <View style={styles.pickerWrapper}>
-                  <Picker
-                    selectedValue={unit}
-                    onValueChange={setUnit}
-                    style={styles.picker}
-                    dropdownIconColor="#222"
-                  >
-                    {units.map((u) => (
-                      <Picker.Item key={u} label={u} value={u} />
-                    ))}
-                  </Picker>
-                </View>
+                <TouchableOpacity
+                  ref={unitButtonRef}
+                  style={styles.dropdownButton}
+                  onPress={showUnitDropdown}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.dropdownButtonText}>{unit}</Text>
+                  <ChevronDown size={18} color="#888" style={{ marginLeft: 8 }} />
+                </TouchableOpacity>
+                <Modal
+                  visible={unitDropdownVisible}
+                  transparent
+                  animationType="fade"
+                  onRequestClose={() => setUnitDropdownVisible(false)}
+                >
+                  <TouchableOpacity style={styles.dropdownFullOverlay} onPress={() => setUnitDropdownVisible(false)} activeOpacity={1}>
+                    <View style={[styles.dropdownPopover, { position: 'absolute', top: unitDropdownPos.top, left: unitDropdownPos.left, width: unitDropdownPos.width, maxHeight: 260 }]}>
+                      <FlatList
+                        data={units}
+                        keyExtractor={item => item}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            style={styles.dropdownOption}
+                            onPress={() => { setUnit(item); setUnitDropdownVisible(false); }}
+                          >
+                            <Text style={styles.dropdownOptionText}>{item}</Text>
+                          </TouchableOpacity>
+                        )}
+                      />
+                    </View>
+                  </TouchableOpacity>
+                </Modal>
               </View>
             </View>
             {/* Category */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Category</Text>
-              <View style={styles.pickerWrapper}>
-                <Picker
-                  selectedValue={category}
-                  onValueChange={(value) => setCategory(value as FoodCategory)}
-                  style={styles.picker}
-                  dropdownIconColor="#222"
-                >
-                  {categories.map((cat) => (
-                    <Picker.Item key={cat} label={cat} value={cat} />
-                  ))}
-                </Picker>
-              </View>
+              <TouchableOpacity
+                ref={categoryButtonRef}
+                style={styles.dropdownButton}
+                onPress={showCategoryDropdown}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.dropdownButtonText}>{category}</Text>
+                <ChevronDown size={18} color="#888" style={{ marginLeft: 8 }} />
+              </TouchableOpacity>
+              <Modal
+                visible={categoryDropdownVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setCategoryDropdownVisible(false)}
+              >
+                <TouchableOpacity style={styles.dropdownFullOverlay} onPress={() => setCategoryDropdownVisible(false)} activeOpacity={1}>
+                  <View style={[styles.dropdownPopover, { position: 'absolute', top: categoryDropdownPos.top, left: categoryDropdownPos.left, width: categoryDropdownPos.width, maxHeight: 260 }]}>
+                    <FlatList
+                      data={categories}
+                      keyExtractor={item => item}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity
+                          style={styles.dropdownOption}
+                          onPress={() => { setCategory(item as FoodCategory); setCategoryDropdownVisible(false); }}
+                        >
+                          <Text style={styles.dropdownOptionText}>{item}</Text>
+                        </TouchableOpacity>
+                      )}
+                    />
+                  </View>
+                </TouchableOpacity>
+              </Modal>
             </View>
             {/* Expiration Date */}
             <View style={styles.inputGroup}>
@@ -251,32 +319,32 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 0,
     borderTopRightRadius: 0,
     alignItems: 'center',
-    paddingTop: 18,
+    paddingTop: 8,
     paddingBottom: 0,
-    minHeight: 60,
+    minHeight: 40,
     flexDirection: 'row',
     justifyContent: 'center',
   },
   closeButton: {
     position: 'absolute',
-    top: 18,
-    right: 18,
+    top: 8,
+    right: 16,
     zIndex: 30,
     backgroundColor: 'rgba(0,0,0,0.06)',
-    borderRadius: 16,
-    width: 32,
-    height: 32,
+    borderRadius: 12,
+    width: 24,
+    height: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
   closeButtonText: {
-    fontSize: 22,
+    fontSize: 16,
     color: '#222',
     fontWeight: '700',
-    lineHeight: 28,
+    lineHeight: 20,
   },
   title: {
-    fontSize: 26,
+    fontSize: 22,
     fontWeight: '700',
     textAlign: 'center',
     color: '#222',
@@ -284,8 +352,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'flex-end',
-    paddingTop: 60, // Match stickyHeader minHeight for no gap
+    paddingTop: 40,
     paddingBottom: 32,
   },
   card: {
@@ -294,13 +361,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 0,
     marginTop: 0,
     marginBottom: 0,
-    padding: 28,
+    padding: 16,
     shadowColor: '#000',
     shadowOpacity: 0.08,
-    shadowRadius: 24,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 8,
-    minHeight: 540,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
+    minHeight: 340,
   },
   inputGroup: {
     marginBottom: 18,
@@ -357,7 +424,7 @@ const styles = StyleSheet.create({
   saveButton: {
     backgroundColor: '#222',
     borderRadius: 32,
-    paddingVertical: 18,
+    paddingVertical: 14,
     alignItems: 'center',
     marginTop: 10,
     marginBottom: 0,
@@ -441,5 +508,57 @@ const styles = StyleSheet.create({
   closeSearchButtonText: {
     color: '#6b7280',
     fontSize: 14,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginTop: 4,
+    marginBottom: 0,
+    minHeight: 44,
+  },
+  dropdownButtonText: {
+    flex: 1,
+    fontSize: 16,
+    color: '#222',
+    fontWeight: '500',
+  },
+  dropdownOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dropdownPopover: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    paddingVertical: 8,
+    paddingHorizontal: 0,
+    shadowColor: '#000',
+    shadowOpacity: 0.10,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 8,
+    zIndex: 1000,
+  },
+  dropdownOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  dropdownOptionText: {
+    fontSize: 16,
+    color: '#222',
+    fontWeight: '500',
+  },
+  dropdownFullOverlay: {
+    flex: 1,
+    backgroundColor: 'transparent',
   },
 }); 

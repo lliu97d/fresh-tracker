@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Animated, Modal, Pressable } from 'react-native';
+import { Animated, Modal, Pressable, View } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { Card, Text, XStack, YStack, Button, Stack } from 'tamagui';
 import { Calendar, Package, Clock, AlertTriangle, CheckCircle, Trash2, Minus, Info, Archive } from '@tamagui/lucide-icons';
@@ -455,52 +455,61 @@ export default function PantryCard({
         transparent
         animationType="fade"
       >
-        <Pressable style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(0,0,0,0.5)' }} onPress={() => setShowStorageTips(false)}>
-          <Card
-            elevate
-            size="$4"
-            bordered
-            scale={0.95}
-            hoverStyle={{ scale: 1.02 }}
-            pressStyle={{ scale: 0.96 }}
-            backgroundColor="white"
-            borderColor="#ccc"
-            borderWidth={1}
-            padding="$5"
-            borderRadius="$4"
-            shadowColor="#000"
-            shadowOffset={{ width: 0, height: 2 }}
-            shadowOpacity={0.1}
-            shadowRadius={10}
-            maxWidth={400}
-            minWidth={320}
+        <Pressable style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: 'rgba(30,32,38,0.18)' }} onPress={() => setShowStorageTips(false)}>
+          <View
+            style={{
+              backgroundColor: '#F6F7FB',
+              borderRadius: 20,
+              padding: 18,
+              minWidth: 240,
+              maxWidth: 320,
+              alignItems: 'center',
+              shadowColor: '#000',
+              shadowOpacity: 0.06,
+              shadowRadius: 16,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 6,
+              position: 'relative',
+            }}
           >
-            <Text fontSize="$6" fontWeight="bold" color="#212121" marginBottom="$4" textAlign="center">
+            {/* X Close Button */}
+            <Pressable
+              style={{ position: 'absolute', top: 10, right: 10, zIndex: 10, backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 12, width: 24, height: 24, alignItems: 'center', justifyContent: 'center' }}
+              onPress={() => setShowStorageTips(false)}
+              hitSlop={12}
+            >
+              <Text style={{ fontSize: 16, color: '#222', fontWeight: '700', lineHeight: 20 }}>×</Text>
+            </Pressable>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: '#212121', marginBottom: 10, textAlign: 'center' }}>
               {storageInfo.title}
             </Text>
-            <YStack space="$3" marginBottom="$4">
+            <View style={{ width: '100%', marginBottom: 10, alignItems: 'flex-start', paddingHorizontal: 12 }}>
               {storageInfo.tips.map((tip, index) => (
-                <XStack key={index} space="$3" alignItems="flex-start">
-                  <Text fontSize="$2" color="#666" marginTop="$1">•</Text>
-                  <Text fontSize="$4" color="#444" flex={1} lineHeight={15} fontWeight="500">
-                    {tip}
-                  </Text>
-                </XStack>
+                <View key={index} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 8, width: '100%' }}>
+                  <Text style={{ fontSize: 14, color: '#666', marginTop: 1, marginRight: 8, width: 8 }}>•</Text>
+                  <Text style={{ fontSize: 14, color: '#333', flex: 1, lineHeight: 20, fontWeight: '500', textAlign: 'left' }}>{tip}</Text>
+                </View>
               ))}
-            </YStack>
-            <Button
-              size="$4"
-              backgroundColor={categoryStyle.accentColor}
-              borderColor={categoryStyle.accentColor}
-              borderWidth={1}
-              borderRadius="$4"
-              paddingVertical="$3"
+            </View>
+            <Pressable
+              style={{
+                backgroundColor: categoryStyle.accentColor,
+                borderRadius: 16,
+                paddingVertical: 8,
+                paddingHorizontal: 18,
+                alignItems: 'center',
+                marginTop: 2,
+                shadowColor: categoryStyle.accentColor,
+                shadowOpacity: 0.10,
+                shadowRadius: 6,
+                shadowOffset: { width: 0, height: 1 },
+                elevation: 1,
+              }}
               onPress={() => setShowStorageTips(false)}
-              pressStyle={{ backgroundColor: categoryStyle.accentColor, opacity: 0.9 }}
             >
-              <Text color="white" fontWeight="600" fontSize="$4">Close</Text>
-            </Button>
-          </Card>
+              <Text style={{ color: 'white', fontWeight: '700', fontSize: 13 }}>Close</Text>
+            </Pressable>
+          </View>
         </Pressable>
       </Modal>
     </YStack>
