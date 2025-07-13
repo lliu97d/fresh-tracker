@@ -22,7 +22,7 @@ export default function App() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <TamaguiProvider config={config}>
           <SafeAreaProvider>
-            <SafeAreaView style={styles.loadingContainer}>
+            <SafeAreaView style={styles.loadingContainer} edges={['top', 'bottom']}>
               <ActivityIndicator size="large" color="#2563eb" />
               <Text style={styles.loadingText}>Loading FreshTracker...</Text>
             </SafeAreaView>
@@ -37,7 +37,7 @@ export default function App() {
       <TamaguiProvider config={config}>
         <SafeAreaProvider>
           <NavigationContainer>
-            <SafeAreaView style={{ flex: 1, backgroundColor: '#f3f4f6' }}>
+            <SafeAreaView style={{ flex: 1, backgroundColor: '#f3f4f6' }} edges={['top', 'bottom']}>
               <TabNavigator />
             </SafeAreaView>
           </NavigationContainer>

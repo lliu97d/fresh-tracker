@@ -1,29 +1,28 @@
 import React, { useState } from 'react';
-import { ScrollView } from 'react-native';
-import { View, Text, YStack, XStack, Button, Card, Stack } from 'tamagui';
-import { AlertTriangle, CheckCircle, Clock } from '@tamagui/lucide-icons';
+import { ScrollView, View } from 'react-native';
+import { Text, YStack, XStack, Button, Card } from 'tamagui';
 import AddItemFAB from '../components/AddItemFAB';
 import ItemCard, { FreshnessStatus } from '../components/ItemCard';
+import PantryCard from '../components/PantryCard';
 import HeaderBar from '../components/HeaderBar';
 import EmptyState from '../components/EmptyState';
 import { useStore } from '../store';
 
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'Good morning';
+  if (hour < 18) return 'Good afternoon';
+  return 'Good evening';
+}
+
 export default function FoodScreen({ navigation }: any) {
-  const { foodItems, getFoodItemsByLocation, deleteFoodItem, updateFoodItem } = useStore();
+  const { foodItems, getFoodItemsByLocation, deleteFoodItem, updateFoodItem, userProfile } = useStore();
   const [selected, setSelected] = useState<'fresh' | 'pantry'>('fresh');
   const [statusFilter, setStatusFilter] = useState<FreshnessStatus | null>(null);
   
   const freshItems = getFoodItemsByLocation('fresh');
   const pantryItems = getFoodItemsByLocation('pantry');
   
-  const summary = freshItems.reduce(
-    (acc, item) => {
-      acc[item.status]++;
-      return acc;
-    },
-    { fresh: 0, watch: 0, expiring: 0, expired: 0 }
-  );
-
   // Filter items based on status filter
   const filteredFreshItems = statusFilter 
     ? freshItems.filter(item => item.status === statusFilter)
@@ -50,158 +49,149 @@ export default function FoodScreen({ navigation }: any) {
   };
 
   return (
-    <View style={{ flex: 1 }}>
-      <HeaderBar title="Food" />
-      
-      {/* Segmented Control */}
-      <YStack paddingHorizontal="$5" paddingTop="$4" paddingBottom="$3">
-        <Card
-          backgroundColor="$gray3"
-          borderRadius="$4"
-          padding="$1"
-          borderColor="$gray6"
-          borderWidth={1}
-        >
-          <XStack>
-            <Button
-              flex={1}
-              size="$3"
-              backgroundColor={selected === 'fresh' ? '$primary' : 'transparent'}
-              color={selected === 'fresh' ? 'white' : '$gray11'}
-              fontWeight={selected === 'fresh' ? 'bold' : '500'}
-              borderRadius="$3"
-              onPress={() => setSelected('fresh')}
-              pressStyle={{ backgroundColor: selected === 'fresh' ? '$primary' : '$gray4' }}
-            >
-              Fresh Foods
-            </Button>
-            <Button
-              flex={1}
-              size="$3"
-              backgroundColor={selected === 'pantry' ? '$primary' : 'transparent'}
-              color={selected === 'pantry' ? 'white' : '$gray11'}
-              fontWeight={selected === 'pantry' ? 'bold' : '500'}
-              borderRadius="$3"
-              onPress={() => setSelected('pantry')}
-              pressStyle={{ backgroundColor: selected === 'pantry' ? '$primary' : '$gray4' }}
-            >
+    <View style={{ flex: 1, backgroundColor: '#F6F7FB' }}>
+      {/* Modern Header with Dynamic Greeting and Tabs */}
+      <View
+        style={{
+          backgroundColor: '#F6F7FB',
+          paddingTop: 36,
+          paddingBottom: 10,
+          paddingHorizontal: 20,
+          borderBottomLeftRadius: 32,
+          borderBottomRightRadius: 32,
+          alignItems: 'flex-start',
+        }}
+      >
+        <Text fontSize={26} fontWeight="700" color="#222" style={{ marginBottom: 8 }}>
+          {getGreeting()}{userProfile?.name ? `, ${userProfile.name}` : ''}
+        </Text>
+        <Text fontSize={18} fontWeight="400" color="#666" style={{ marginBottom: 18 }}>
+          Today is going to be a good day.
+        </Text>
+        {/* Tabs for Fresh Items and Pantry, with Add button */}
+        <XStack space={10} alignItems="center">
+          <Button
+            backgroundColor={selected === 'fresh' ? '#E8F5E8' : '#F3F4F6'}
+            borderRadius={20}
+            paddingHorizontal={18}
+            paddingVertical={8}
+            elevation={selected === 'fresh' ? 2 : 1}
+            shadowOpacity={selected === 'fresh' ? 0.08 : 0.04}
+            borderWidth={0}
+            onPress={() => setSelected('fresh')}
+            pressStyle={{ backgroundColor: '#E8F5E8' }}
+          >
+            <Text fontSize={16} color={selected === 'fresh' ? '#388E3C' : '#222'} fontWeight={selected === 'fresh' ? '600' : '500'}>
+              Fresh Items
+            </Text>
+          </Button>
+          <Button
+            backgroundColor={selected === 'pantry' ? '#FFF8E1' : '#F3F4F6'}
+            borderRadius={20}
+            paddingHorizontal={18}
+            paddingVertical={8}
+            elevation={selected === 'pantry' ? 2 : 1}
+            shadowOpacity={selected === 'pantry' ? 0.10 : 0.04}
+            borderWidth={0}
+            onPress={() => setSelected('pantry')}
+            pressStyle={{ backgroundColor: '#FFF8E1' }}
+          >
+            <Text fontSize={16} color={selected === 'pantry' ? '#7B4F19' : '#222'} fontWeight={selected === 'pantry' ? '700' : '500'}>
               Pantry
-            </Button>
+            </Text>
+          </Button>
+          <Button
+            backgroundColor="#388E3C"
+            borderRadius={20}
+            paddingHorizontal={18}
+            paddingVertical={8}
+            elevation={2}
+            shadowOpacity={0.08}
+            borderWidth={0}
+            marginLeft={8}
+            onPress={() => navigation.navigate('ManualEntry')}
+            pressStyle={{ backgroundColor: '#256029' }}
+          >
+            <Text fontSize={16} color="#FFF" fontWeight="600">+ Add</Text>
+          </Button>
+        </XStack>
+      </View>
+
+      {/* Minimal Borderless Filter Bar with Counts, Horizontally Scrollable */}
+      <YStack marginTop={4} marginBottom={12}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }}>
+          <XStack space="$2" alignItems="center" justifyContent="center">
+            {[
+              {
+                label: 'Fresh', value: 'fresh',
+                selectedBg: '#E8F5E8', selectedText: '#388E3C',
+                unselectedBg: '#F3F4F6', unselectedText: '#222',
+                count: freshItems.filter(item => item.status === 'fresh').length,
+              },
+              {
+                label: 'Watch', value: 'watch',
+                selectedBg: '#FFF3E0', selectedText: '#E65100',
+                unselectedBg: '#F3F4F6', unselectedText: '#222',
+                count: freshItems.filter(item => item.status === 'watch').length,
+              },
+              {
+                label: 'Expiring', value: 'expiring',
+                selectedBg: '#FFEBEE', selectedText: '#B71C1C',
+                unselectedBg: '#F3F4F6', unselectedText: '#222',
+                count: freshItems.filter(item => item.status === 'expiring').length,
+              },
+              {
+                label: 'Expired', value: 'expired',
+                selectedBg: '#E0E0E0', selectedText: '#222',
+                unselectedBg: '#F3F4F6', unselectedText: '#222',
+                count: freshItems.filter(item => item.status === 'expired').length,
+              },
+            ].map(({ label, value, selectedBg, selectedText, unselectedBg, unselectedText, count }) => {
+              const isSelected = statusFilter === value;
+              return (
+                <Button
+                  key={value}
+                  size="$2"
+                  borderRadius={20}
+                  backgroundColor={isSelected ? selectedBg : unselectedBg}
+                  borderWidth={0}
+                  paddingHorizontal={16}
+                  paddingVertical={4}
+                  minWidth={0}
+                  elevation={isSelected ? 2 : 1}
+                  shadowOpacity={isSelected ? 0.08 : 0.04}
+                  onPress={() => handleStatusFilter(value as FreshnessStatus)}
+                  pressStyle={{ backgroundColor: selectedBg }}
+                >
+                  <XStack alignItems="center" space={6}>
+                    <Text
+                      fontSize={14}
+                      color={isSelected ? selectedText : unselectedText}
+                      fontWeight={isSelected ? '600' : '500'}
+                    >
+                      {label}
+                    </Text>
+                    <Text
+                      fontSize={13}
+                      color={isSelected ? selectedText : unselectedText}
+                      fontWeight="500"
+                      marginLeft={4}
+                    >
+                      {count}
+                    </Text>
+                  </XStack>
+                </Button>
+              );
+            })}
           </XStack>
-        </Card>
+        </ScrollView>
+        <YStack height={1} backgroundColor="#F0F1F2" marginTop={12} />
       </YStack>
 
       {/* Content */}
       {selected === 'fresh' ? (
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}>
           <YStack space="$4">
-            {/* Header with Add Button */}
-            <XStack justifyContent="space-between" alignItems="center">
-              <Text fontSize="$7" fontWeight="bold" color="$color">
-                Fresh Items
-              </Text>
-              <Button
-                size="$3"
-                backgroundColor="$primary"
-                color="white"
-                borderRadius="$4"
-                paddingHorizontal="$3"
-                paddingVertical="$2"
-                onPress={() => navigation.navigate('ManualEntry')}
-                pressStyle={{ backgroundColor: '$primary' }}
-              >
-                <Text fontSize="$3" fontWeight="600">+ Add</Text>
-              </Button>
-            </XStack>
-            
-            {/* Summary Cards */}
-            <ScrollView 
-              horizontal 
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 0 }}
-            >
-              <XStack space="$3" paddingHorizontal="$5">
-                <Card
-                  backgroundColor={statusFilter === 'fresh' ? '#E8F5E8' : '#F1F8E9'}
-                  borderColor={statusFilter === 'fresh' ? '#81C784' : '#C8E6C9'}
-                  borderWidth={statusFilter === 'fresh' ? 2 : 1}
-                  borderRadius="$4"
-                  padding="$3"
-                  alignItems="center"
-                  onPress={() => handleStatusFilter('fresh')}
-                  pressStyle={{ backgroundColor: '#E8F5E8' }}
-                  minWidth={100}
-                >
-                  <CheckCircle size={20} color="#81C784" marginBottom="$2" />
-                  <Text fontSize="$6" fontWeight="bold" color="#212121">
-                    {summary.fresh}
-                  </Text>
-                  <Text fontSize="$2" color="#424242" textAlign="center">
-                    Fresh & Good
-                  </Text>
-                </Card>
-
-                <Card
-                  backgroundColor={statusFilter === 'watch' ? '#FFF3E0' : '#FFF8E1'}
-                  borderColor={statusFilter === 'watch' ? '#FFB74D' : '#FFCC80'}
-                  borderWidth={statusFilter === 'watch' ? 2 : 1}
-                  borderRadius="$4"
-                  padding="$3"
-                  alignItems="center"
-                  onPress={() => handleStatusFilter('watch')}
-                  pressStyle={{ backgroundColor: '#FFF3E0' }}
-                  minWidth={100}
-                >
-                  <Clock size={20} color="#FFB74D" marginBottom="$2" />
-                  <Text fontSize="$6" fontWeight="bold" color="#212121">
-                    {summary.watch}
-                  </Text>
-                  <Text fontSize="$2" color="#424242" textAlign="center">
-                    Watch Closely
-                  </Text>
-                </Card>
-                
-                <Card
-                  backgroundColor={statusFilter === 'expiring' ? '#FFEBEE' : '#FFF5F5'}
-                  borderColor={statusFilter === 'expiring' ? '#EF5350' : '#FFCDD2'}
-                  borderWidth={statusFilter === 'expiring' ? 2 : 1}
-                  borderRadius="$4"
-                  padding="$3"
-                  alignItems="center"
-                  onPress={() => handleStatusFilter('expiring')}
-                  pressStyle={{ backgroundColor: '#FFEBEE' }}
-                  minWidth={100}
-                >
-                  <AlertTriangle size={20} color="#EF5350" marginBottom="$2" />
-                  <Text fontSize="$6" fontWeight="bold" color="#212121">
-                    {summary.expiring}
-                  </Text>
-                  <Text fontSize="$2" color="#424242" textAlign="center">
-                    Expiring Soon
-                  </Text>
-                </Card>
-                
-                <Card
-                  backgroundColor={statusFilter === 'expired' ? '#F5F5F5' : '#FAFAFA'}
-                  borderColor={statusFilter === 'expired' ? '#9E9E9E' : '#E0E0E0'}
-                  borderWidth={statusFilter === 'expired' ? 2 : 1}
-                  borderRadius="$4"
-                  padding="$3"
-                  alignItems="center"
-                  onPress={() => handleStatusFilter('expired')}
-                  pressStyle={{ backgroundColor: '#F5F5F5' }}
-                  minWidth={100}
-                >
-                  <AlertTriangle size={20} color="#9E9E9E" marginBottom="$2" />
-                  <Text fontSize="$6" fontWeight="bold" color="#212121">
-                    {summary.expired}
-                  </Text>
-                  <Text fontSize="$2" color="#424242" textAlign="center">
-                    Expired
-                  </Text>
-                </Card>
-              </XStack>
-            </ScrollView>
 
             {/* Food Items */}
             <YStack space="$3">
@@ -241,51 +231,27 @@ export default function FoodScreen({ navigation }: any) {
           </YStack>
         </ScrollView>
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
+        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}>
           <YStack space="$4">
-            {/* Header with Add Button */}
-            <XStack justifyContent="space-between" alignItems="center">
-              <Text fontSize="$7" fontWeight="bold" color="$color">
-                Pantry & Seasonings
-              </Text>
-              <Button
-                size="$3"
-                backgroundColor="$primary"
-                color="white"
-                borderRadius="$4"
-                paddingHorizontal="$3"
-                paddingVertical="$2"
-                onPress={() => navigation.navigate('ManualEntry')}
-                pressStyle={{ backgroundColor: '$primary' }}
-              >
-                <Text fontSize="$3" fontWeight="600">+ Add</Text>
-              </Button>
-            </XStack>
             
             <YStack space="$3">
               {pantryItems.length > 0 ? (
                 pantryItems.map((item) => (
-                  <Card
+                  <PantryCard
                     key={item.id}
-                    backgroundColor="$gray2"
-                    borderColor="$gray6"
-                    borderWidth={1}
-                    borderRadius="$4"
-                    padding="$4"
-                    marginBottom="$3"
-                  >
-                    <XStack justifyContent="space-between" alignItems="center" marginBottom="$2">
-                      <Text fontSize="$5" fontWeight="bold" color="$color">
-                        {item.name}
-                      </Text>
-                      <Text fontSize="$3" color="$gray10">
-                        Expires {item.expirationDate.toLocaleDateString()}
-                      </Text>
-                    </XStack>
-                    <Text fontSize="$4" color="$gray11">
-                      {item.quantity} {item.unit} • {item.category}
-                    </Text>
-                  </Card>
+                    id={item.id}
+                    name={item.name}
+                    quantity={item.quantity}
+                    originalQuantity={item.originalQuantity}
+                    unit={item.unit}
+                    category={item.category}
+                    calories={`${item.calories || 0} per 100g`}
+                    expiresInDays={Math.ceil((item.expirationDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}
+                    status={item.status}
+                    onViewRecipes={() => {}}
+                    onUpdateQty={handleUpdateQuantity}
+                    onDelete={handleDeleteItem}
+                  />
                 ))
               ) : (
                 <EmptyState

@@ -10,6 +10,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import BarcodeScannerScreen from '../screens/BarcodeScannerScreen';
 import ManualEntryScreen from '../screens/ManualEntryScreen';
 import { Ionicons } from '@expo/vector-icons';
+import { Home, BookOpen, User } from '@tamagui/lucide-icons';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -35,39 +36,48 @@ function RecipesStack() {
 
 export default function TabNavigator() {
   const insets = useSafeAreaInsets();
-  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ color, size }) => {
-          let iconName: keyof typeof Ionicons.glyphMap = 'nutrition';
+        tabBarIcon: ({ focused, color, size }) => {
+          // Use lucide-icons for a modern look
           if (route.name === 'Food') {
-            iconName = 'nutrition';
+            return <Home size={26} color={focused ? '#388E3C' : '#B0B0B0'} style={{ marginBottom: 2 }} />;
           } else if (route.name === 'Recipes') {
-            iconName = 'restaurant';
+            return <BookOpen size={26} color={focused ? '#388E3C' : '#B0B0B0'} style={{ marginBottom: 2 }} />;
           } else if (route.name === 'Profile') {
-            iconName = 'person-circle';
+            return <User size={26} color={focused ? '#388E3C' : '#B0B0B0'} style={{ marginBottom: 2 }} />;
           }
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return null;
         },
-        tabBarActiveTintColor: '#22c55e',
-        tabBarInactiveTintColor: '#6b7280',
+        tabBarActiveTintColor: '#388E3C',
+        tabBarInactiveTintColor: '#B0B0B0',
         tabBarStyle: {
-          backgroundColor: 'white',
-          borderTopWidth: 1,
-          borderTopColor: '#e5e7eb',
-          paddingTop: 8,
-          paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom, 8) : 8,
-          height: Platform.OS === 'ios' ? 60 + insets.bottom : 60,
-          elevation: 0,
+          backgroundColor: '#FFF',
+          borderTopWidth: 0,
+          borderTopColor: 'transparent',
+          height: Platform.OS === 'ios' ? 72 + insets.bottom : 72,
+          paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom, 18) : 18,
+          paddingTop: 10,
+          // Remove floating effect:
+          position: 'relative',
+          marginHorizontal: 0,
+          marginBottom: 0,
+          borderRadius: 0,
+          left: 0,
+          right: 0,
+          shadowColor: 'transparent',
           shadowOpacity: 0,
+          shadowRadius: 0,
+          shadowOffset: { width: 0, height: 0 },
+          elevation: 0,
         },
         tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '600',
-          marginTop: 4,
-          marginBottom: Platform.OS === 'ios' ? 0 : 4,
+          fontSize: 13,
+          fontWeight: '500',
+          marginTop: 0,
         },
+        headerShown: false,
       })}
     >
       <Tab.Screen 
@@ -75,7 +85,7 @@ export default function TabNavigator() {
         component={FoodStack} 
         options={{ 
           headerShown: false,
-          tabBarLabel: 'Food',
+          tabBarLabel: 'Home',
         }} 
       />
       <Tab.Screen 

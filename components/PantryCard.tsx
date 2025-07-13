@@ -2,15 +2,15 @@ import React, { useState, useRef } from 'react';
 import { Animated, Modal, Pressable } from 'react-native';
 import { PanGestureHandler, State } from 'react-native-gesture-handler';
 import { Card, Text, XStack, YStack, Button, Stack } from 'tamagui';
-import { Calendar, Flame, Package, Clock, AlertTriangle, CheckCircle, Trash2, Minus, Info } from '@tamagui/lucide-icons';
+import { Calendar, Package, Clock, AlertTriangle, CheckCircle, Trash2, Minus, Info, Archive } from '@tamagui/lucide-icons';
 
 export type FreshnessStatus = 'fresh' | 'watch' | 'expiring' | 'expired';
 
-interface ItemCardProps {
+interface PantryCardProps {
   id: string;
   name: string;
   quantity: number;
-  originalQuantity: number;  // Add originalQuantity prop
+  originalQuantity: number;
   unit: string;
   category: string;
   calories: string;
@@ -22,51 +22,6 @@ interface ItemCardProps {
 }
 
 const categoryConfig = {
-  Vegetables: {
-    backgroundColor: '#E8F5E8',
-    borderColor: '#4CAF50',
-    accentColor: '#2E7D32',
-    iconColor: '#4CAF50',
-    updateType: 'count',
-    decrementAmount: 1,
-    unit: 'pcs',
-  },
-  Fruits: {
-    backgroundColor: '#FFF3E0',
-    borderColor: '#FF9800',
-    accentColor: '#E65100',
-    iconColor: '#FF9800',
-    updateType: 'count',
-    decrementAmount: 1,
-    unit: 'pcs',
-  },
-  Meat: {
-    backgroundColor: '#FFEBEE',
-    borderColor: '#F44336',
-    accentColor: '#C62828',
-    iconColor: '#F44336',
-    updateType: 'count',
-    decrementAmount: 1,
-    unit: 'pcs',
-  },
-  Dairy: {
-    backgroundColor: '#E3F2FD',
-    borderColor: '#2196F3',
-    accentColor: '#1565C0',
-    iconColor: '#2196F3',
-    updateType: 'percentage',
-    decrementAmount: 10,
-    unit: '%',
-  },
-  Bakery: {
-    backgroundColor: '#FFF8E1',
-    borderColor: '#FFC107',
-    accentColor: '#F57F17',
-    iconColor: '#FFC107',
-    updateType: 'count',
-    decrementAmount: 1,
-    unit: 'pcs',
-  },
   Pantry: {
     backgroundColor: '#F3E5F5',
     borderColor: '#9C27B0',
@@ -137,58 +92,8 @@ const statusConfig = {
   },
 };
 
-// Storage suggestions for different food categories
+// Storage suggestions for pantry items
 const storageSuggestions: Record<string, { title: string; tips: string[] }> = {
-  Vegetables: {
-    title: "Vegetable Storage Tips",
-    tips: [
-      "Store in the refrigerator crisper drawer",
-      "Keep leafy greens in a plastic bag with a paper towel",
-      "Store root vegetables in a cool, dark place",
-      "Don't wash until ready to use",
-      "Separate ethylene-producing fruits from vegetables"
-    ]
-  },
-  Fruits: {
-    title: "Fruit Storage Tips",
-    tips: [
-      "Store most fruits in the refrigerator",
-      "Keep bananas at room temperature until ripe",
-      "Store apples separately from other fruits",
-      "Don't wash until ready to eat",
-      "Use ethylene absorbers to extend freshness"
-    ]
-  },
-  Meat: {
-    title: "Meat Storage Tips",
-    tips: [
-      "Store in the coldest part of the refrigerator",
-      "Use within 2-3 days or freeze",
-      "Keep raw meat separate from other foods",
-      "Store in airtight containers or plastic wrap",
-      "Check expiration dates regularly"
-    ]
-  },
-  Dairy: {
-    title: "Dairy Storage Tips",
-    tips: [
-      "Store in the refrigerator at 40°F or below",
-      "Keep milk in the back of the fridge, not the door",
-      "Store cheese in wax paper or cheese paper",
-      "Don't store dairy in the refrigerator door",
-      "Use within expiration date for best quality"
-    ]
-  },
-  Bakery: {
-    title: "Bakery Storage Tips",
-    tips: [
-      "Store bread at room temperature in a bread box",
-      "Freeze bread to extend shelf life",
-      "Keep pastries in airtight containers",
-      "Store in a cool, dry place",
-      "Check for mold before consuming"
-    ]
-  },
   Pantry: {
     title: "Pantry Storage Tips",
     tips: [
@@ -241,7 +146,7 @@ const storageSuggestions: Record<string, { title: string; tips: string[] }> = {
   }
 };
 
-export default function ItemCard({
+export default function PantryCard({
   id,
   name,
   quantity,
@@ -254,7 +159,7 @@ export default function ItemCard({
   onViewRecipes,
   onUpdateQty,
   onDelete,
-}: ItemCardProps) {
+}: PantryCardProps) {
   const getUpdateType = () => {
     // Determine update type based on unit
     const percentageUnits = ['g', 'kg', 'ml', 'L', 'lb', 'oz', 'gallon', 'bottle', 'cup', 'tbsp', 'tsp'];
@@ -299,9 +204,9 @@ export default function ItemCard({
   const [showStorageTips, setShowStorageTips] = useState(false);
   
   let statusText = '';
-  if (status === 'fresh') statusText = 'Fresh';
-  else if (status === 'watch') statusText = 'Watch';
-  else if (status === 'expiring') statusText = 'Expiring';
+  if (status === 'fresh') statusText = 'Good';
+  else if (status === 'watch') statusText = 'Check';
+  else if (status === 'expiring') statusText = 'Soon';
   else statusText = 'Expired';
 
   // Get storage suggestions for this food category
@@ -393,7 +298,7 @@ export default function ItemCard({
     // Check if quantity is effectively zero (using a small threshold for percentage-based items)
     const isEffectivelyZero = updateConfig.updateType === 'percentage' 
       ? newQuantity < 0.01  // Consider less than 0.01 as effectively zero
-      : newQuantity <= 0;   // For count-based items, use exact zero
+      : newQuantity <= 0;
     
     if (isEffectivelyZero) {
       // Animate deletion when quantity reaches effectively zero
@@ -425,15 +330,6 @@ export default function ItemCard({
       if (onUpdateQty) {
         onUpdateQty(id, newQuantity);
       }
-    }
-  };
-
-  const formatQuantity = () => {
-    if (updateConfig.updateType === 'percentage') {
-      const percentage = Math.round((currentQuantity / originalQuantity) * 100);
-      return `${percentage}%`;
-    } else {
-      return `${Math.round(currentQuantity || 0)} ${unit}`;
     }
   };
 
@@ -474,49 +370,56 @@ export default function ItemCard({
           elevation={0}
         >
           <YStack space={10}>
+            {/* Header with name and status */}
             <XStack alignItems="center" justifyContent="space-between">
-              <Text fontSize={17} fontWeight="600" color="#222" numberOfLines={2} ellipsizeMode="tail">
+              <Text fontSize={17} fontWeight="600" color="#222" numberOfLines={2} ellipsizeMode="tail" flex={1}>
                 {name}
               </Text>
               <XStack
-                backgroundColor="#E8F5E8"
+                backgroundColor={categoryStyle.backgroundColor}
                 borderRadius={10}
                 paddingHorizontal={8}
                 paddingVertical={3}
                 alignItems="center"
                 space={3}
               >
-                <StatusIcon size={12} color="#388E3C" />
-                <Text fontSize={11} color="#388E3C" fontWeight="500">
+                <StatusIcon size={12} color={categoryStyle.accentColor} />
+                <Text fontSize={11} color={categoryStyle.accentColor} fontWeight="500">
                   {statusText}
                 </Text>
               </XStack>
             </XStack>
+            
+            {/* Quantity and category */}
             <Text fontSize={14} color="#666" fontWeight="500">
               {formatQuantityDisplay()} • {category}
             </Text>
+            
+            {/* Pantry-specific info row */}
             <XStack space={12} alignItems="center">
-              <Calendar size={14} color={categoryStyle.iconColor} />
+              <Archive size={14} color={categoryStyle.iconColor} />
               <Text fontSize={13} color={categoryStyle.accentColor} fontWeight="500">
                 {expiresInDays} {expiresInDays === 1 ? 'day' : 'days'} left
               </Text>
-              <Flame size={14} color="#FF6B35" />
+              <Package size={14} color="#FF6B35" />
               <Text fontSize={13} color="#FF6B35" fontWeight="500">
                 {calories.split(' ')[0]} cal
               </Text>
             </XStack>
+            
+            {/* Action buttons */}
             <XStack space={8} alignItems="center">
               <Button
-                backgroundColor="#E8F5E8"
+                backgroundColor={categoryStyle.backgroundColor}
                 borderRadius={14}
                 paddingHorizontal={10}
                 paddingVertical={5}
                 onPress={handleDecrease}
-                pressStyle={{ backgroundColor: '#C8E6C9' }}
+                pressStyle={{ backgroundColor: categoryStyle.borderColor, opacity: 0.8 }}
                 disabled={currentQuantity <= 0}
                 opacity={currentQuantity <= 0 ? 0.5 : 1}
               >
-                <Minus size={14} color="#388E3C" />
+                <Minus size={14} color={categoryStyle.accentColor} />
               </Button>
               {/* Info button for storage tips */}
               <Button
@@ -529,7 +432,7 @@ export default function ItemCard({
               >
                 <Info size={14} color="#388E3C" />
               </Button>
-              {/* Delete button (swipe-to-delete still supported) */}
+              {/* Delete button */}
               <Button
                 backgroundColor="#FFEBEE"
                 borderRadius={14}
@@ -544,7 +447,8 @@ export default function ItemCard({
           </YStack>
         </Card>
       </Animated.View>
-      {/* Storage Tips Modal (unchanged) */}
+      
+      {/* Storage Tips Modal */}
       <Modal
         visible={showStorageTips}
         onRequestClose={() => setShowStorageTips(false)}
