@@ -151,6 +151,36 @@ export default function ItemCard({
   onUpdateQty,
   onDelete,
 }: ItemCardProps) {
+  const getUpdateType = () => {
+    // Determine update type based on unit
+    const percentageUnits = ['g', 'kg', 'ml', 'L', 'lb', 'oz', 'gallon', 'bottle', 'cup', 'tbsp', 'tsp'];
+    const countUnits = ['pcs', 'pieces', 'item', 'bag', 'box', 'pack', 'can', 'jar'];
+    
+    const normalizedUnit = unit.toLowerCase();
+    
+    if (percentageUnits.includes(normalizedUnit)) {
+      return {
+        updateType: 'percentage',
+        decrementAmount: 10,
+        displayUnit: '%'
+      };
+    } else if (countUnits.includes(normalizedUnit)) {
+      return {
+        updateType: 'count',
+        decrementAmount: 1,
+        displayUnit: 'pcs'
+      };
+    } else {
+      // Default to count-based for unknown units
+      return {
+        updateType: 'count',
+        decrementAmount: 1,
+        displayUnit: 'pcs'
+      };
+    }
+  };
+
+  const updateConfig = getUpdateType();
   const categoryStyle = categoryConfig[category as keyof typeof categoryConfig] || categoryConfig.Other;
   const statusStyle = statusConfig[status];
   const StatusIcon = statusStyle.icon;
@@ -241,19 +271,24 @@ export default function ItemCard({
 
   const handleDecrease = () => {
     let newQuantity;
-    if (categoryStyle.updateType === 'percentage') {
+    if (updateConfig.updateType === 'percentage') {
       // For percentage-based items, calculate decrement as percentage of original quantity
-      const decrementAmount = (categoryStyle.decrementAmount / 100) * originalQuantity;
+      const decrementAmount = (updateConfig.decrementAmount / 100) * originalQuantity;
       newQuantity = Math.max(0, currentQuantity - decrementAmount);
     } else {
       // For count-based items, decrement by fixed amount
-      newQuantity = Math.max(0, currentQuantity - categoryStyle.decrementAmount);
+      newQuantity = Math.max(0, currentQuantity - updateConfig.decrementAmount);
     }
     
     setCurrentQuantity(newQuantity);
     
-    if (newQuantity <= 0) {
-      // Animate deletion when quantity reaches 0
+    // Check if quantity is effectively zero (using a small threshold for percentage-based items)
+    const isEffectivelyZero = updateConfig.updateType === 'percentage' 
+      ? newQuantity < 0.01  // Consider less than 0.01 as effectively zero
+      : newQuantity <= 0;   // For count-based items, use exact zero
+    
+    if (isEffectivelyZero) {
+      // Animate deletion when quantity reaches effectively zero
       setIsDeleting(true);
       Animated.parallel([
         Animated.timing(fadeAnim, {
@@ -278,7 +313,7 @@ export default function ItemCard({
         }
       });
     } else {
-      // Update quantity if not zero
+      // Update quantity if not effectively zero
       if (onUpdateQty) {
         onUpdateQty(id, newQuantity);
       }
@@ -286,11 +321,26 @@ export default function ItemCard({
   };
 
   const formatQuantity = () => {
-    if (categoryStyle.updateType === 'percentage') {
+    if (updateConfig.updateType === 'percentage') {
       const percentage = Math.round((currentQuantity / originalQuantity) * 100);
       return `${percentage}%`;
     } else {
-      return `${currentQuantity} ${categoryStyle.unit}`;
+      return `${Math.round(currentQuantity || 0)} ${unit}`;
+    }
+  };
+
+  const formatQuantityDisplay = () => {
+    if (updateConfig.updateType === 'percentage') {
+      // For percentage-based items, show quantity with max 2 decimal places
+      const quantity = currentQuantity || 0;
+      // If it's an integer greater than 10, show as whole number
+      if (quantity >= 10 && Number.isInteger(quantity)) {
+        return `${Math.round(quantity)} ${unit}`;
+      }
+      return `${quantity.toFixed(2)} ${unit}`;
+    } else {
+      // For count-based items, show as integer
+      return `${Math.round(currentQuantity || 0)} ${unit}`;
     }
   };
 
@@ -365,11 +415,18 @@ export default function ItemCard({
               {/* Header with Status Label */}
               <XStack justifyContent="space-between" alignItems="flex-start">
                 <YStack flex={1} space="$2">
-                  <Text fontSize="$5" fontWeight="700" color="#212121" lineHeight={1.2}>
+                  <Text 
+                    fontSize="$5" 
+                    fontWeight="700" 
+                    color="#212121" 
+                    lineHeight={20}
+                    numberOfLines={2}
+                    ellipsizeMode="tail"
+                  >
                     {name}
                   </Text>
                   <Text fontSize="$3" color="#666" fontWeight="500">
-                    {quantity} {unit} • {category}
+                    {formatQuantityDisplay()} • {category}
                   </Text>
                 </YStack>
                 

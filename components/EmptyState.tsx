@@ -1,22 +1,68 @@
 import React from 'react';
-import { YStack, Text, Button } from 'tamagui';
-import { Package, Plus } from '@tamagui/lucide-icons';
+import { YStack, Text } from 'tamagui';
+import { Package, ShoppingCart, Refrigerator, AlertTriangle, Clock, CheckCircle, XCircle } from '@tamagui/lucide-icons';
 
 interface EmptyStateProps {
   title: string;
   message: string;
-  actionText?: string;
-  onAction?: () => void;
-  icon?: React.ReactNode;
+  variant?: 'fresh' | 'pantry' | 'filter' | 'expired' | 'expiring' | 'watch';
 }
 
 export default function EmptyState({
   title,
   message,
-  actionText,
-  onAction,
-  icon = <Package size={48} color="$gray9" />
+  variant = 'fresh'
 }: EmptyStateProps) {
+  // Get appropriate icon and colors based on variant
+  const getVariantConfig = () => {
+    switch (variant) {
+      case 'fresh':
+        return {
+          icon: <CheckCircle size={80} color="#9E9E9E" />,
+          titleColor: '#212121',
+          messageColor: '#666'
+        };
+      case 'pantry':
+        return {
+          icon: <Package size={80} color="#9E9E9E" />,
+          titleColor: '#212121',
+          messageColor: '#666'
+        };
+      case 'filter':
+        return {
+          icon: <ShoppingCart size={80} color="#9E9E9E" />,
+          titleColor: '#212121',
+          messageColor: '#666'
+        };
+      case 'expired':
+        return {
+          icon: <XCircle size={80} color="#9E9E9E" />,
+          titleColor: '#212121',
+          messageColor: '#666'
+        };
+      case 'expiring':
+        return {
+          icon: <AlertTriangle size={80} color="#9E9E9E" />,
+          titleColor: '#212121',
+          messageColor: '#666'
+        };
+      case 'watch':
+        return {
+          icon: <Clock size={80} color="#9E9E9E" />,
+          titleColor: '#212121',
+          messageColor: '#666'
+        };
+      default:
+        return {
+          icon: <Refrigerator size={80} color="#9E9E9E" />,
+          titleColor: '#212121',
+          messageColor: '#666'
+        };
+    }
+  };
+
+  const config = getVariantConfig();
+
   return (
     <YStack
       flex={1}
@@ -27,53 +73,34 @@ export default function EmptyState({
     >
       <YStack
         alignItems="center"
-        space="$3"
-        padding="$6"
-        backgroundColor="$gray2"
-        borderRadius="$6"
-        borderColor="$gray6"
-        borderWidth={1}
+        space="$4"
+        maxWidth={300}
       >
-        {icon}
+        {/* Icon */}
+        {config.icon}
         
-        <YStack alignItems="center" space="$2">
+        {/* Text Content */}
+        <YStack alignItems="center" space="$3">
           <Text
-            fontSize="$5"
+            fontSize="$6"
             fontWeight="bold"
-            color="$color"
+            color={config.titleColor}
             textAlign="center"
+            lineHeight={20}
           >
             {title}
           </Text>
           
           <Text
             fontSize="$3"
-            color="$gray10"
+            color={config.messageColor}
             textAlign="center"
-            maxWidth={280}
+            lineHeight={15}
+            fontWeight="500"
           >
             {message}
           </Text>
         </YStack>
-        
-        {actionText && onAction && (
-          <Button
-            size="$3"
-            backgroundColor="$primary"
-            color="white"
-            borderRadius="$4"
-            paddingHorizontal="$4"
-            paddingVertical="$2"
-            onPress={onAction}
-            pressStyle={{ backgroundColor: '$primary' }}
-            marginTop="$2"
-          >
-            <Plus size={16} marginRight="$2" />
-            <Text fontSize="$3" fontWeight="600">
-              {actionText}
-            </Text>
-          </Button>
-        )}
       </YStack>
     </YStack>
   );

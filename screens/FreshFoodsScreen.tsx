@@ -217,10 +217,9 @@ export default function FoodScreen({ navigation }: any) {
                     `You don't have any items that are ${statusFilter === 'expired' ? 'expired' :
                      statusFilter === 'expiring' ? 'expiring soon' : 
                      statusFilter === 'watch' ? 'needing attention' : 'fresh and good'}.` :
-                    "You haven't added any fresh food items yet. Start by scanning a barcode or manually entering an item."
+                    "Your fresh food inventory is empty. Use the + button below to add items by scanning barcodes or manual entry."
                   }
-                  actionText="Add Your First Item"
-                  onAction={() => navigation.navigate('ManualEntry')}
+                  variant={statusFilter || 'fresh'}
                 />
               )}
             </YStack>
@@ -261,9 +260,8 @@ export default function FoodScreen({ navigation }: any) {
               ) : (
                 <EmptyState
                   title="No Pantry Items"
-                  message="Your pantry is empty. Add some non-perishable items to keep track of your supplies."
-                  actionText="Add Pantry Item"
-                  onAction={() => navigation.navigate('ManualEntry')}
+                  message="Your pantry is empty. Use the + button below to add non-perishable items to your inventory."
+                  variant="pantry"
                 />
               )}
             </YStack>
