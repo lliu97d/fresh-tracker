@@ -95,9 +95,24 @@ export default function FoodScreen({ navigation }: any) {
       {selected === 'fresh' ? (
         <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
           <YStack space="$4">
-            <Text fontSize="$7" fontWeight="bold" color="$color">
-              Fresh Items
-            </Text>
+            {/* Header with Add Button */}
+            <XStack justifyContent="space-between" alignItems="center">
+              <Text fontSize="$7" fontWeight="bold" color="$color">
+                Fresh Items
+              </Text>
+              <Button
+                size="$3"
+                backgroundColor="$primary"
+                color="white"
+                borderRadius="$4"
+                paddingHorizontal="$3"
+                paddingVertical="$2"
+                onPress={() => navigation.navigate('ManualEntry')}
+                pressStyle={{ backgroundColor: '$primary' }}
+              >
+                <Text fontSize="$3" fontWeight="600">+ Add</Text>
+              </Button>
+            </XStack>
             
             {/* Summary Cards */}
             <ScrollView 
@@ -228,9 +243,24 @@ export default function FoodScreen({ navigation }: any) {
       ) : (
         <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 100 }}>
           <YStack space="$4">
-            <Text fontSize="$7" fontWeight="bold" color="$color">
-              Pantry & Seasonings
-            </Text>
+            {/* Header with Add Button */}
+            <XStack justifyContent="space-between" alignItems="center">
+              <Text fontSize="$7" fontWeight="bold" color="$color">
+                Pantry & Seasonings
+              </Text>
+              <Button
+                size="$3"
+                backgroundColor="$primary"
+                color="white"
+                borderRadius="$4"
+                paddingHorizontal="$3"
+                paddingVertical="$2"
+                onPress={() => navigation.navigate('ManualEntry')}
+                pressStyle={{ backgroundColor: '$primary' }}
+              >
+                <Text fontSize="$3" fontWeight="600">+ Add</Text>
+              </Button>
+            </XStack>
             
             <YStack space="$3">
               {pantryItems.length > 0 ? (
@@ -268,11 +298,6 @@ export default function FoodScreen({ navigation }: any) {
           </YStack>
         </ScrollView>
       )}
-      
-      <AddItemFAB
-        onScanBarcode={() => navigation.navigate('BarcodeScanner')}
-        onManualEntry={() => navigation.navigate('ManualEntry')}
-      />
     </View>
   );
 } 
