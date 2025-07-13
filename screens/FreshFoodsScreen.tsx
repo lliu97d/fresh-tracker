@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ScrollView, View } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { ScrollView, View, Modal, Pressable, PanResponder, Animated, Dimensions } from 'react-native';
 import { Text, YStack, XStack, Button, Card } from 'tamagui';
 import AddItemFAB from '../components/AddItemFAB';
 import ItemCard, { FreshnessStatus } from '../components/ItemCard';
@@ -7,6 +7,7 @@ import PantryCard from '../components/PantryCard';
 import HeaderBar from '../components/HeaderBar';
 import EmptyState from '../components/EmptyState';
 import { useStore } from '../store';
+import ManualEntryScreen from './ManualEntryScreen';
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -19,6 +20,50 @@ export default function FoodScreen({ navigation }: any) {
   const { foodItems, getFoodItemsByLocation, deleteFoodItem, updateFoodItem, userProfile } = useStore();
   const [selected, setSelected] = useState<'fresh' | 'pantry'>('fresh');
   const [statusFilter, setStatusFilter] = useState<FreshnessStatus | null>(null);
+  const screenHeight = Dimensions.get('window').height;
+  const [modalVisible, setModalVisible] = useState(false);
+  const panY = useRef(new Animated.Value(screenHeight)).current;
+  const overlayOpacity = panY.interpolate({
+    inputRange: [0, screenHeight],
+    outputRange: [0.18, 0],
+    extrapolate: 'clamp',
+  });
+
+  // Slide up animation logic
+  React.useEffect(() => {
+    if (modalVisible) {
+      panY.setValue(screenHeight);
+      Animated.timing(panY, {
+        toValue: 0,
+        duration: 320,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      panY.setValue(screenHeight);
+    }
+  }, [modalVisible]);
+
+  const closeModal = () => {
+    Animated.timing(panY, {
+      toValue: screenHeight,
+      duration: 220,
+      useNativeDriver: true,
+    }).start(() => setModalVisible(false));
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onMoveShouldSetPanResponder: (_, gestureState) => gestureState.dy > 8,
+      onPanResponderMove: Animated.event([null, { dy: panY }], { useNativeDriver: false }),
+      onPanResponderRelease: (_, gestureState) => {
+        if (gestureState.dy > 80) {
+          closeModal();
+        } else {
+          Animated.spring(panY, { toValue: 0, useNativeDriver: true }).start();
+        }
+      },
+    })
+  ).current;
   
   const freshItems = getFoodItemsByLocation('fresh');
   const pantryItems = getFoodItemsByLocation('pantry');
@@ -109,7 +154,7 @@ export default function FoodScreen({ navigation }: any) {
             shadowOpacity={0.08}
             borderWidth={0}
             marginLeft={8}
-            onPress={() => navigation.navigate('ManualEntry')}
+            onPress={() => setModalVisible(true)}
             pressStyle={{ backgroundColor: '#256029' }}
           >
             <Text fontSize={16} color="#FFF" fontWeight="600">+ Add</Text>
@@ -264,6 +309,61 @@ export default function FoodScreen({ navigation }: any) {
           </YStack>
         </ScrollView>
       )}
+
+      {/* Manual Entry Modal Overlay */}
+      <Modal
+        visible={modalVisible}
+        animationType="none"
+        transparent
+        onRequestClose={closeModal}
+      >
+        <Animated.View
+          style={{ flex: 1, backgroundColor: overlayOpacity.interpolate({inputRange: [0, 0.18], outputRange: ['rgba(0,0,0,0)', 'rgba(0,0,0,0.18)']}) }}
+          pointerEvents="box-none"
+        >
+          <Pressable
+            style={{ flex: 1 }}
+            onPress={closeModal}
+            pointerEvents="auto"
+          >
+            <Animated.View
+              style={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: '80%',
+                backgroundColor: '#fff',
+                borderTopLeftRadius: 32,
+                borderTopRightRadius: 32,
+                shadowColor: '#000',
+                shadowOpacity: 0.10,
+                shadowRadius: 16,
+                shadowOffset: { width: 0, height: -4 },
+                elevation: 12,
+                overflow: 'hidden',
+                transform: [{ translateY: panY }],
+              }}
+              onStartShouldSetResponder={() => true}
+              onResponderStart={e => e.stopPropagation()}
+            >
+              <View
+                style={{ alignItems: 'center', paddingTop: 10, paddingBottom: 2 }}
+                {...panResponder.panHandlers}
+              >
+                <View style={{ width: 48, height: 5, borderRadius: 3, backgroundColor: '#E0E0E0', marginBottom: 8 }} />
+              </View>
+              <ManualEntryScreen
+                navigation={{
+                  ...navigation,
+                  goBack: closeModal,
+                }}
+                onRequestClose={closeModal}
+              />
+            </Animated.View>
+          </Pressable>
+        </Animated.View>
+      </Modal>
     </View>
   );
 } 

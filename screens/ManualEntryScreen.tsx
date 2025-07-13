@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, TouchableOpacity, Platform, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Platform, ScrollView, Alert, KeyboardAvoidingView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useStore } from '../store';
@@ -10,7 +10,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 const categories: FoodCategory[] = ['Vegetables', 'Meat', 'Dairy', 'Fruits', 'Bakery', 'Other'];
 const units = ['pcs', 'g', 'kg', 'ml', 'L', 'lb', 'oz', 'bag', 'box'];
 
-export default function ManualEntryScreen({ navigation }: any) {
+export default function ManualEntryScreen({ navigation, onRequestClose }: any) {
   const { addFoodItem } = useStore();
   const [name, setName] = useState('');
   const [quantity, setQuantity] = useState('');
@@ -19,31 +19,29 @@ export default function ManualEntryScreen({ navigation }: any) {
   const [expiration, setExpiration] = useState(new Date());
   const [showDate, setShowDate] = useState(false);
   const [notes, setNotes] = useState('');
-  
-  // Food database search states
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<FoodProduct[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
 
   const onSave = () => {
+    const parsedQuantity = parseFloat(quantity) || 0;
     addFoodItem({
       name,
-      quantity: parseFloat(quantity) || 0,
+      quantity: parsedQuantity,
+      originalQuantity: parsedQuantity,
       unit,
       category,
       expirationDate: expiration,
       notes: notes || undefined,
-      location: 'fresh', // Default to fresh items
+      location: 'fresh',
     });
     navigation.goBack();
   };
 
   const handleSearch = async () => {
     if (!name.trim()) return;
-
     setIsSearching(true);
     setShowSearchResults(false);
-    
     try {
       const results = await foodDatabase.searchUSDA(name);
       setSearchResults(results);
@@ -65,8 +63,6 @@ export default function ManualEntryScreen({ navigation }: any) {
       setExpiration(newExpiration);
     }
     setShowSearchResults(false);
-    
-    // Show nutrition info if available
     if (product.nutrition.calories) {
       Alert.alert(
         'Nutrition Info',
@@ -84,225 +80,330 @@ export default function ManualEntryScreen({ navigation }: any) {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>Add Food Item</Text>
-
-      {/* Name Input with Search */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Name *</Text>
-        <View style={styles.searchContainer}>
-          <TextInput
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-            placeholder="Enter food name"
-          />
-          <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-            <Text style={styles.searchButtonText}>🔍</Text>
-          </TouchableOpacity>
-        </View>
-        
-        {isSearching && <LoadingSpinner message="Searching..." size="small" />}
-        
-        {showSearchResults && searchResults.length > 0 && (
-          <View style={styles.searchResults}>
-            <Text style={styles.searchResultsTitle}>Found Products:</Text>
-            {searchResults.map((product, index) => (
-              <TouchableOpacity
-                key={product.id}
-                style={styles.searchResultItem}
-                onPress={() => handleSelectProduct(product)}
-              >
-                <Text style={styles.searchResultName}>{product.name}</Text>
-                {product.brand && <Text style={styles.searchResultBrand}>{product.brand}</Text>}
-                {product.nutrition.calories && (
-                  <Text style={styles.searchResultNutrition}>
-                    {product.nutrition.calories} kcal per 100g
-                  </Text>
-                )}
-              </TouchableOpacity>
-            ))}
+    <View style={styles.screenBg}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <View style={styles.stickyHeader}>
+          {onRequestClose && (
             <TouchableOpacity
-              style={styles.closeSearchButton}
-              onPress={() => setShowSearchResults(false)}
+              style={styles.closeButton}
+              onPress={onRequestClose}
+              hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
             >
-              <Text style={styles.closeSearchButtonText}>Close</Text>
+              <Text style={styles.closeButtonText}>×</Text>
+            </TouchableOpacity>
+          )}
+          <Text style={styles.title}>Add Food Item</Text>
+        </View>
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <View style={styles.card}>
+            {/* Name Input with Search */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Name *</Text>
+              <View style={styles.searchContainer}>
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Enter food name"
+                  placeholderTextColor="#B0B0B0"
+                />
+                <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+                  <Text style={styles.searchButtonText}>🔍</Text>
+                </TouchableOpacity>
+              </View>
+              {isSearching && <LoadingSpinner message="Searching..." size="small" />}
+              {showSearchResults && searchResults.length > 0 && (
+                <View style={styles.searchResults}>
+                  <Text style={styles.searchResultsTitle}>Found Products:</Text>
+                  {searchResults.map((product, index) => (
+                    <TouchableOpacity
+                      key={product.id}
+                      style={styles.searchResultItem}
+                      onPress={() => handleSelectProduct(product)}
+                    >
+                      <Text style={styles.searchResultName}>{product.name}</Text>
+                      {product.brand && <Text style={styles.searchResultBrand}>{product.brand}</Text>}
+                      {product.nutrition.calories && (
+                        <Text style={styles.searchResultNutrition}>
+                          {product.nutrition.calories} kcal per 100g
+                        </Text>
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                  <TouchableOpacity
+                    style={styles.closeSearchButton}
+                    onPress={() => setShowSearchResults(false)}
+                  >
+                    <Text style={styles.closeSearchButtonText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+            {/* Quantity and Unit */}
+            <View style={styles.row}>
+              <View style={styles.halfWidth}>
+                <Text style={styles.label}>Quantity *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={quantity}
+                  onChangeText={setQuantity}
+                  placeholder="0"
+                  placeholderTextColor="#B0B0B0"
+                  keyboardType="numeric"
+                />
+              </View>
+              <View style={styles.halfWidth}>
+                <Text style={styles.label}>Unit</Text>
+                <View style={styles.pickerWrapper}>
+                  <Picker
+                    selectedValue={unit}
+                    onValueChange={setUnit}
+                    style={styles.picker}
+                    dropdownIconColor="#222"
+                  >
+                    {units.map((u) => (
+                      <Picker.Item key={u} label={u} value={u} />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
+            </View>
+            {/* Category */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Category</Text>
+              <View style={styles.pickerWrapper}>
+                <Picker
+                  selectedValue={category}
+                  onValueChange={(value) => setCategory(value as FoodCategory)}
+                  style={styles.picker}
+                  dropdownIconColor="#222"
+                >
+                  {categories.map((cat) => (
+                    <Picker.Item key={cat} label={cat} value={cat} />
+                  ))}
+                </Picker>
+              </View>
+            </View>
+            {/* Expiration Date */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Expiration Date</Text>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setShowDate(true)}
+              >
+                <Text style={styles.dateButtonText}>
+                  {expiration.toLocaleDateString()}
+                </Text>
+              </TouchableOpacity>
+              {showDate && (
+                <DateTimePicker
+                  value={expiration}
+                  mode="date"
+                  display="default"
+                  onChange={handleDateChange}
+                  minimumDate={new Date()}
+                />
+              )}
+            </View>
+            {/* Notes */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Notes</Text>
+              <TextInput
+                style={[styles.input, styles.textArea]}
+                value={notes}
+                onChangeText={setNotes}
+                placeholder="Additional notes..."
+                placeholderTextColor="#B0B0B0"
+                multiline
+                numberOfLines={3}
+              />
+            </View>
+            {/* Save Button */}
+            <TouchableOpacity
+              style={[styles.saveButton, (!name.trim() || !quantity.trim()) && styles.saveButtonDisabled]}
+              onPress={onSave}
+              disabled={!name.trim() || !quantity.trim()}
+            >
+              <Text style={styles.saveButtonText}>Add Food Item</Text>
             </TouchableOpacity>
           </View>
-        )}
-      </View>
-
-      {/* Quantity and Unit */}
-      <View style={styles.row}>
-        <View style={styles.halfWidth}>
-          <Text style={styles.label}>Quantity *</Text>
-          <TextInput
-            style={styles.input}
-            value={quantity}
-            onChangeText={setQuantity}
-            placeholder="0"
-            keyboardType="numeric"
-          />
-        </View>
-        <View style={styles.halfWidth}>
-          <Text style={styles.label}>Unit</Text>
-          <Picker
-            selectedValue={unit}
-            onValueChange={setUnit}
-            style={styles.picker}
-          >
-            {units.map((u) => (
-              <Picker.Item key={u} label={u} value={u} />
-            ))}
-          </Picker>
-        </View>
-      </View>
-
-      {/* Category */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Category</Text>
-        <Picker
-          selectedValue={category}
-          onValueChange={(value) => setCategory(value as FoodCategory)}
-          style={styles.picker}
-        >
-          {categories.map((cat) => (
-            <Picker.Item key={cat} label={cat} value={cat} />
-          ))}
-        </Picker>
-      </View>
-
-      {/* Expiration Date */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Expiration Date</Text>
-        <TouchableOpacity
-          style={styles.dateButton}
-          onPress={() => setShowDate(true)}
-        >
-          <Text style={styles.dateButtonText}>
-            {expiration.toLocaleDateString()}
-          </Text>
-        </TouchableOpacity>
-        {showDate && (
-          <DateTimePicker
-            value={expiration}
-            mode="date"
-            display="default"
-            onChange={handleDateChange}
-            minimumDate={new Date()}
-          />
-        )}
-      </View>
-
-      {/* Notes */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Notes</Text>
-        <TextInput
-          style={[styles.input, styles.textArea]}
-          value={notes}
-          onChangeText={setNotes}
-          placeholder="Additional notes..."
-          multiline
-          numberOfLines={3}
-        />
-      </View>
-
-      {/* Save Button */}
-      <View style={styles.buttonContainer}>
-        <Button
-          title="Save Item"
-          onPress={onSave}
-          disabled={!name.trim() || !quantity.trim()}
-        />
-        <Button title="Cancel" onPress={() => navigation.goBack()} />
-      </View>
-    </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  screenBg: {
     flex: 1,
-    padding: 20,
+    backgroundColor: '#F6F7FB',
+  },
+  stickyHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 20,
     backgroundColor: '#fff',
+    borderTopLeftRadius: 0,
+    borderTopRightRadius: 0,
+    alignItems: 'center',
+    paddingTop: 18,
+    paddingBottom: 0,
+    minHeight: 60,
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 18,
+    right: 18,
+    zIndex: 30,
+    backgroundColor: 'rgba(0,0,0,0.06)',
+    borderRadius: 16,
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  closeButtonText: {
+    fontSize: 22,
+    color: '#222',
+    fontWeight: '700',
+    lineHeight: 28,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
+    fontSize: 26,
+    fontWeight: '700',
     textAlign: 'center',
-    color: '#2563eb',
+    color: '#222',
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'flex-end',
+    paddingTop: 60, // Match stickyHeader minHeight for no gap
+    paddingBottom: 32,
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 0,
+    marginHorizontal: 0,
+    marginTop: 0,
+    marginBottom: 0,
+    padding: 28,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 8,
+    minHeight: 540,
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 18,
   },
   label: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    marginBottom: 8,
+    marginBottom: 7,
     color: '#374151',
   },
   input: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 12,
+    borderWidth: 0,
+    borderRadius: 16,
+    padding: 16,
     fontSize: 16,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#F3F4F6',
+    color: '#222',
   },
   textArea: {
-    height: 80,
+    height: 72,
     textAlignVertical: 'top',
   },
   row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 18,
+    gap: 12,
   },
   halfWidth: {
     width: '48%',
   },
+  pickerWrapper: {
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    overflow: 'hidden',
+  },
   picker: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    backgroundColor: '#f9fafb',
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    color: '#222',
+    fontSize: 16,
+    height: 48,
   },
   dateButton: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 12,
-    backgroundColor: '#f9fafb',
+    borderRadius: 16,
+    padding: 16,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'flex-start',
   },
   dateButtonText: {
     fontSize: 16,
     color: '#374151',
   },
-  buttonContainer: {
-    marginTop: 20,
-    gap: 10,
+  saveButton: {
+    backgroundColor: '#222',
+    borderRadius: 32,
+    paddingVertical: 18,
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 0,
+    shadowColor: '#000',
+    shadowOpacity: 0.10,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#B0B0B0',
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  cancelButton: {
+    marginTop: 12,
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  cancelButtonText: {
+    color: '#888',
+    fontSize: 16,
+    fontWeight: '600',
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   searchButton: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#E8E8E8',
     padding: 12,
-    borderRadius: 8,
+    borderRadius: 12,
     marginLeft: 8,
   },
   searchButtonText: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#222',
+    fontSize: 18,
   },
   searchResults: {
     marginTop: 10,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    backgroundColor: '#f9fafb',
+    borderRadius: 16,
+    backgroundColor: '#F3F4F6',
+    overflow: 'hidden',
   },
   searchResultsTitle: {
     fontSize: 14,
@@ -310,7 +411,7 @@ const styles = StyleSheet.create({
     padding: 10,
     color: '#374151',
     borderBottomWidth: 1,
-    borderBottomColor: '#d1d5db',
+    borderBottomColor: '#e5e7eb',
   },
   searchResultItem: {
     padding: 12,
@@ -335,7 +436,7 @@ const styles = StyleSheet.create({
   closeSearchButton: {
     padding: 10,
     alignItems: 'center',
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#F3F4F6',
   },
   closeSearchButtonText: {
     color: '#6b7280',
