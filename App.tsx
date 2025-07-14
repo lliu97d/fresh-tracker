@@ -21,12 +21,12 @@ export default function App() {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
         <TamaguiProvider config={config}>
-          <SafeAreaProvider>
+      <SafeAreaProvider>
             <SafeAreaView style={styles.loadingContainer} edges={['top', 'bottom']}>
-              <ActivityIndicator size="large" color="#2563eb" />
-              <Text style={styles.loadingText}>Loading FreshTracker...</Text>
-            </SafeAreaView>
-          </SafeAreaProvider>
+          <ActivityIndicator size="large" color="#2563eb" />
+          <Text style={styles.loadingText}>Loading FreshTracker...</Text>
+        </SafeAreaView>
+      </SafeAreaProvider>
         </TamaguiProvider>
       </GestureHandlerRootView>
     );
@@ -35,13 +35,13 @@ export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <TamaguiProvider config={config}>
-        <SafeAreaProvider>
-          <NavigationContainer>
+    <SafeAreaProvider>
+      <NavigationContainer>
             <SafeAreaView style={{ flex: 1, backgroundColor: '#f3f4f6' }} edges={['top', 'bottom']}>
-              <TabNavigator />
-            </SafeAreaView>
-          </NavigationContainer>
-        </SafeAreaProvider>
+          <TabNavigator />
+        </SafeAreaView>
+      </NavigationContainer>
+    </SafeAreaProvider>
       </TamaguiProvider>
     </GestureHandlerRootView>
   );

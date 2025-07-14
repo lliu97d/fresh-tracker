@@ -123,68 +123,68 @@ export default function ManualEntryScreen({ navigation, onRequestClose }: any) {
               <Text style={styles.closeButtonText}>×</Text>
             </TouchableOpacity>
           )}
-          <Text style={styles.title}>Add Food Item</Text>
+      <Text style={styles.title}>Add Food Item</Text>
         </View>
         <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
           <View style={styles.card}>
-            {/* Name Input with Search */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Name *</Text>
-              <View style={styles.searchContainer}>
-                <TextInput
-                  style={styles.input}
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Enter food name"
+      {/* Name Input with Search */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Name *</Text>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.input}
+            value={name}
+            onChangeText={setName}
+            placeholder="Enter food name"
                   placeholderTextColor="#B0B0B0"
-                />
-                <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
-                  <Text style={styles.searchButtonText}>🔍</Text>
-                </TouchableOpacity>
-              </View>
-              {isSearching && <LoadingSpinner message="Searching..." size="small" />}
-              {showSearchResults && searchResults.length > 0 && (
-                <View style={styles.searchResults}>
-                  <Text style={styles.searchResultsTitle}>Found Products:</Text>
-                  {searchResults.map((product, index) => (
-                    <TouchableOpacity
-                      key={product.id}
-                      style={styles.searchResultItem}
-                      onPress={() => handleSelectProduct(product)}
-                    >
-                      <Text style={styles.searchResultName}>{product.name}</Text>
-                      {product.brand && <Text style={styles.searchResultBrand}>{product.brand}</Text>}
-                      {product.nutrition.calories && (
-                        <Text style={styles.searchResultNutrition}>
-                          {product.nutrition.calories} kcal per 100g
-                        </Text>
-                      )}
-                    </TouchableOpacity>
-                  ))}
-                  <TouchableOpacity
-                    style={styles.closeSearchButton}
-                    onPress={() => setShowSearchResults(false)}
-                  >
-                    <Text style={styles.closeSearchButtonText}>Close</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-            {/* Quantity and Unit */}
-            <View style={styles.row}>
-              <View style={styles.halfWidth}>
-                <Text style={styles.label}>Quantity *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={quantity}
-                  onChangeText={setQuantity}
-                  placeholder="0"
+          />
+          <TouchableOpacity style={styles.searchButton} onPress={handleSearch}>
+            <Text style={styles.searchButtonText}>🔍</Text>
+          </TouchableOpacity>
+        </View>
+        {isSearching && <LoadingSpinner message="Searching..." size="small" />}
+        {showSearchResults && searchResults.length > 0 && (
+          <View style={styles.searchResults}>
+            <Text style={styles.searchResultsTitle}>Found Products:</Text>
+            {searchResults.map((product, index) => (
+              <TouchableOpacity
+                key={product.id}
+                style={styles.searchResultItem}
+                onPress={() => handleSelectProduct(product)}
+              >
+                <Text style={styles.searchResultName}>{product.name}</Text>
+                {product.brand && <Text style={styles.searchResultBrand}>{product.brand}</Text>}
+                {product.nutrition.calories && (
+                  <Text style={styles.searchResultNutrition}>
+                    {product.nutrition.calories} kcal per 100g
+                  </Text>
+                )}
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.closeSearchButton}
+              onPress={() => setShowSearchResults(false)}
+            >
+              <Text style={styles.closeSearchButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+      {/* Quantity and Unit */}
+      <View style={styles.row}>
+        <View style={styles.halfWidth}>
+          <Text style={styles.label}>Quantity *</Text>
+          <TextInput
+            style={styles.input}
+            value={quantity}
+            onChangeText={setQuantity}
+            placeholder="0"
                   placeholderTextColor="#B0B0B0"
-                  keyboardType="numeric"
-                />
-              </View>
-              <View style={styles.halfWidth}>
-                <Text style={styles.label}>Unit</Text>
+            keyboardType="numeric"
+          />
+        </View>
+        <View style={styles.halfWidth}>
+          <Text style={styles.label}>Unit</Text>
                 <TouchableOpacity
                   ref={unitButtonRef}
                   style={styles.dropdownButton}
@@ -217,11 +217,11 @@ export default function ManualEntryScreen({ navigation, onRequestClose }: any) {
                     </View>
                   </TouchableOpacity>
                 </Modal>
-              </View>
-            </View>
-            {/* Category */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Category</Text>
+        </View>
+      </View>
+      {/* Category */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Category</Text>
               <TouchableOpacity
                 ref={categoryButtonRef}
                 style={styles.dropdownButton}
@@ -254,51 +254,51 @@ export default function ManualEntryScreen({ navigation, onRequestClose }: any) {
                   </View>
                 </TouchableOpacity>
               </Modal>
-            </View>
-            {/* Expiration Date */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Expiration Date</Text>
-              <TouchableOpacity
-                style={styles.dateButton}
-                onPress={() => setShowDate(true)}
-              >
-                <Text style={styles.dateButtonText}>
-                  {expiration.toLocaleDateString()}
-                </Text>
-              </TouchableOpacity>
-              {showDate && (
-                <DateTimePicker
-                  value={expiration}
-                  mode="date"
-                  display="default"
-                  onChange={handleDateChange}
-                  minimumDate={new Date()}
-                />
-              )}
-            </View>
-            {/* Notes */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Notes</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={notes}
-                onChangeText={setNotes}
-                placeholder="Additional notes..."
+      </View>
+      {/* Expiration Date */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Expiration Date</Text>
+        <TouchableOpacity
+          style={styles.dateButton}
+          onPress={() => setShowDate(true)}
+        >
+          <Text style={styles.dateButtonText}>
+            {expiration.toLocaleDateString()}
+          </Text>
+        </TouchableOpacity>
+        {showDate && (
+          <DateTimePicker
+            value={expiration}
+            mode="date"
+            display="default"
+            onChange={handleDateChange}
+            minimumDate={new Date()}
+          />
+        )}
+      </View>
+      {/* Notes */}
+      <View style={styles.inputGroup}>
+        <Text style={styles.label}>Notes</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          value={notes}
+          onChangeText={setNotes}
+          placeholder="Additional notes..."
                 placeholderTextColor="#B0B0B0"
-                multiline
-                numberOfLines={3}
-              />
-            </View>
-            {/* Save Button */}
+          multiline
+          numberOfLines={3}
+        />
+      </View>
+      {/* Save Button */}
             <TouchableOpacity
               style={[styles.saveButton, (!name.trim() || !quantity.trim()) && styles.saveButtonDisabled]}
-              onPress={onSave}
-              disabled={!name.trim() || !quantity.trim()}
+          onPress={onSave}
+          disabled={!name.trim() || !quantity.trim()}
             >
               <Text style={styles.saveButtonText}>Add Food Item</Text>
             </TouchableOpacity>
-          </View>
-        </ScrollView>
+      </View>
+    </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { ScrollView, View, Modal, Pressable, PanResponder, Animated, Dimensions } from 'react-native';
+import { ScrollView, View, Modal, Pressable, PanResponder, Animated, Dimensions, ImageBackground, StyleSheet } from 'react-native';
 import { Text, YStack, XStack, Button, Card } from 'tamagui';
 import AddItemFAB from '../components/AddItemFAB';
 import ItemCard, { FreshnessStatus } from '../components/ItemCard';
@@ -8,6 +8,7 @@ import HeaderBar from '../components/HeaderBar';
 import EmptyState from '../components/EmptyState';
 import { useStore } from '../store';
 import ManualEntryScreen from './ManualEntryScreen';
+import HomeIllustration from '../assets/home-illustration-1.png';
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -93,27 +94,36 @@ export default function FoodScreen({ navigation }: any) {
     setStatusFilter(null);
   };
 
+  const screenWidth = Dimensions.get('window').width;
+  const illustrationAspectRatio = 1021 / 889;
+  const illustrationHeight = screenWidth / illustrationAspectRatio;
+
   return (
     <View style={{ flex: 1, backgroundColor: '#F6F7FB' }}>
-      {/* Modern Header with Dynamic Greeting and Tabs */}
-      <View
-        style={{
-          backgroundColor: '#F6F7FB',
-          paddingTop: 36,
-          paddingBottom: 10,
-          paddingHorizontal: 20,
-          borderBottomLeftRadius: 32,
-          borderBottomRightRadius: 32,
-          alignItems: 'flex-start',
-        }}
+      {/* Greeting Section with Illustration Background */}
+      <ImageBackground
+        source={HomeIllustration}
+        style={[styles.greetingBackground, { width: screenWidth, height: illustrationHeight, alignItems: 'center' }]}
+        imageStyle={{ resizeMode: 'contain', alignSelf: 'center' }}
+        resizeMode="contain"
       >
-        <Text fontSize={26} fontWeight="700" color="#222" style={{ marginBottom: 8 }}>
-          {getGreeting()}{userProfile?.name ? `, ${userProfile.name}` : ''}
-        </Text>
-        <Text fontSize={18} fontWeight="400" color="#666" style={{ marginBottom: 18 }}>
-          Today is going to be a good day.
-        </Text>
-        {/* Tabs for Fresh Items and Pantry, with Add button */}
+        <View style={styles.greetingTextContainer}>
+          <Text style={styles.greetingTitle}>
+            {getGreeting()}{userProfile?.name ? `, ${userProfile.name}` : ''}
+          </Text>
+          <Text style={styles.greetingSubtitle}>
+            Today is going to be a good day.
+          </Text>
+        </View>
+      </ImageBackground>
+      {/* Tabs for Fresh Items and Pantry, with Add button */}
+      <View style={{
+        backgroundColor: '#F6F7FB',
+        paddingTop: 0,
+        paddingBottom: 10,
+        paddingHorizontal: 20,
+        alignItems: 'flex-start',
+      }}>
         <XStack space={10} alignItems="center">
           <Button
             backgroundColor={selected === 'fresh' ? '#E8F5E8' : '#F3F4F6'}
@@ -241,18 +251,18 @@ export default function FoodScreen({ navigation }: any) {
             <YStack space="$3">
               {filteredFreshItems.length > 0 ? (
                 filteredFreshItems.map((item) => (
-                  <ItemCard 
-                    key={item.id}
+            <ItemCard 
+              key={item.id}
                     id={item.id}
-                    name={item.name}
+              name={item.name}
                     quantity={item.quantity}
                     originalQuantity={item.originalQuantity}
                     unit={item.unit}
-                    category={item.category}
-                    calories={`${item.calories || 0} per 100g`}
-                    expiresInDays={Math.ceil((item.expirationDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}
-                    status={item.status}
-                    onViewRecipes={() => {}}
+              category={item.category}
+              calories={`${item.calories || 0} per 100g`}
+              expiresInDays={Math.ceil((item.expirationDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}
+              status={item.status}
+              onViewRecipes={() => {}}
                     onUpdateQty={handleUpdateQuantity}
                     onDelete={handleDeleteItem}
                   />
@@ -269,7 +279,7 @@ export default function FoodScreen({ navigation }: any) {
                     "Your fresh food inventory is empty. Use the + button below to add items by scanning barcodes or manual entry."
                   }
                   variant={statusFilter || 'fresh'}
-                />
+            />
               )}
             </YStack>
           </YStack>
@@ -365,4 +375,35 @@ export default function FoodScreen({ navigation }: any) {
       </Modal>
     </View>
   );
-} 
+}
+
+// Add styles at the end of the file
+const styles = StyleSheet.create({
+  greetingBackground: {
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    marginBottom: 0,
+    overflow: 'hidden',
+  },
+  greetingTextContainer: {
+    marginTop: 25,
+    marginLeft: 0,
+    alignItems: 'flex-start',
+    backgroundColor: 'transparent',
+  },
+  greetingTitle: {
+    fontSize: 30,
+    fontWeight: '600',
+    color: '#222',
+    marginBottom: 3,
+    letterSpacing: 0.2,
+  },
+  greetingSubtitle: {
+    fontSize: 18,
+    fontWeight: '400',
+    color: '#444',
+    opacity: 0.92,
+    marginBottom: 0,
+    letterSpacing: 0.1,
+  },
+});
