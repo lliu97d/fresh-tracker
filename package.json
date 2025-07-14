@@ -30,6 +30,7 @@
     "axios": "^1.10.0",
     "expo": "~53.0.15",
     "expo-barcode-scanner": "^13.0.1",
+    "expo-blur": "^14.1.5",
     "expo-dev-client": "~5.2.4",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
@@ -42,7 +43,8 @@
     "react-native-screens": "^4.11.1",
     "react-native-web": "^0.20.0",
     "tamagui": "^1.130.2",
-    "zustand": "^5.0.6"
+    "zustand": "^5.0.6",
+    "expo-linear-gradient": "~14.1.5"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

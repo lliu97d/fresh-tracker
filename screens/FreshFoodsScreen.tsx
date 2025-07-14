@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { ScrollView, View, Modal, Pressable, PanResponder, Animated, Dimensions, ImageBackground, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
 import { Text, YStack, XStack, Button, Card } from 'tamagui';
 import AddItemFAB from '../components/AddItemFAB';
 import ItemCard, { FreshnessStatus } from '../components/ItemCard';
@@ -29,6 +31,7 @@ export default function FoodScreen({ navigation }: any) {
     outputRange: [0.18, 0],
     extrapolate: 'clamp',
   });
+  const [blurAmount, setBlurAmount] = useState(0);
 
   // Slide up animation logic
   React.useEffect(() => {
@@ -97,160 +100,194 @@ export default function FoodScreen({ navigation }: any) {
   const screenWidth = Dimensions.get('window').width;
   const illustrationAspectRatio = 1021 / 889;
   const illustrationHeight = screenWidth / illustrationAspectRatio;
+  const GREETING_HEIGHT = 70; // px, adjust to match greeting text height
+  const ILLUSTRATION_HEIGHT = illustrationHeight;
+  const HEADER_HEIGHT = GREETING_HEIGHT + ILLUSTRATION_HEIGHT;
+
+  // Animated value for scroll position
+  const scrollY = useRef(new Animated.Value(0)).current;
+
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    {
+      useNativeDriver: false,
+      listener: (event: any) => {
+        const y = event.nativeEvent.contentOffset.y;
+        // Calculate blur based on scroll position
+        const max = ILLUSTRATION_HEIGHT;
+        const blur = Math.max(0, Math.min(40, (y / max) * 40));
+        setBlurAmount(blur);
+      },
+    }
+  );
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#F6F7FB' }}>
-      {/* Greeting Section with Illustration Background */}
-      <ImageBackground
-        source={HomeIllustration}
-        style={[styles.greetingBackground, { width: screenWidth, height: illustrationHeight, alignItems: 'center' }]}
-        imageStyle={{ resizeMode: 'contain', alignSelf: 'center' }}
-        resizeMode="contain"
-      >
-        <View style={styles.greetingTextContainer}>
-          <Text style={styles.greetingTitle}>
-            {getGreeting()}{userProfile?.name ? `, ${userProfile.name}` : ''}
-          </Text>
-          <Text style={styles.greetingSubtitle}>
-            Today is going to be a good day.
-          </Text>
-        </View>
-      </ImageBackground>
-      {/* Tabs for Fresh Items and Pantry, with Add button */}
-      <View style={{
-        backgroundColor: '#F6F7FB',
-        paddingTop: 0,
-        paddingBottom: 10,
-        paddingHorizontal: 20,
-        alignItems: 'flex-start',
-      }}>
-        <XStack space={10} alignItems="center">
-          <Button
-            backgroundColor={selected === 'fresh' ? '#E8F5E8' : '#F3F4F6'}
-            borderRadius={20}
-            paddingHorizontal={18}
-            paddingVertical={8}
-            elevation={selected === 'fresh' ? 2 : 1}
-            shadowOpacity={selected === 'fresh' ? 0.08 : 0.04}
-            borderWidth={0}
-            onPress={() => setSelected('fresh')}
-            pressStyle={{ backgroundColor: '#E8F5E8' }}
-          >
-            <Text fontSize={16} color={selected === 'fresh' ? '#388E3C' : '#222'} fontWeight={selected === 'fresh' ? '600' : '500'}>
-              Fresh Items
+    <View style={{ flex: 1, backgroundColor: 'transparent' }}>
+      {/* Gradient background from bottom of illustration to bottom of screen */}
+      <LinearGradient
+        colors={["#c2e082", "#F6F7FB"]} // Adjust #B6D98A to match the bottom color of your illustration
+        style={{ position: 'absolute', left: 0, right: 0, top: ILLUSTRATION_HEIGHT, bottom: 0, zIndex: -1 }}
+      />
+      {/* Illustration + Greeting Text Background (absolute) */}
+      <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: HEADER_HEIGHT, zIndex: 0 }} pointerEvents="none">
+        <ImageBackground
+          source={HomeIllustration}
+          style={{ width: screenWidth, height: ILLUSTRATION_HEIGHT }}
+          imageStyle={{ resizeMode: 'contain', alignSelf: 'center' }}
+        >
+          <View style={[styles.greetingTextContainer, { position: 'absolute', top: 0, left: 0, right: 0, height: GREETING_HEIGHT, justifyContent: 'flex-end', backgroundColor: 'transparent', zIndex: 1 }]}> 
+            <Text style={styles.greetingTitle}>
+              {getGreeting()}{userProfile?.name ? `, ${userProfile.name}` : ''}
             </Text>
-          </Button>
-          <Button
-            backgroundColor={selected === 'pantry' ? '#FFF8E1' : '#F3F4F6'}
-            borderRadius={20}
-            paddingHorizontal={18}
-            paddingVertical={8}
-            elevation={selected === 'pantry' ? 2 : 1}
-            shadowOpacity={selected === 'pantry' ? 0.10 : 0.04}
-            borderWidth={0}
-            onPress={() => setSelected('pantry')}
-            pressStyle={{ backgroundColor: '#FFF8E1' }}
-          >
-            <Text fontSize={16} color={selected === 'pantry' ? '#7B4F19' : '#222'} fontWeight={selected === 'pantry' ? '700' : '500'}>
-              Pantry
+            <Text style={styles.greetingSubtitle}>
+              Today is going to be a good day.
             </Text>
-          </Button>
-          <Button
-            backgroundColor="#388E3C"
-            borderRadius={20}
-            paddingHorizontal={18}
-            paddingVertical={8}
-            elevation={2}
-            shadowOpacity={0.08}
-            borderWidth={0}
-            marginLeft={8}
-            onPress={() => setModalVisible(true)}
-            pressStyle={{ backgroundColor: '#256029' }}
-          >
-            <Text fontSize={16} color="#FFF" fontWeight="600">+ Add</Text>
-          </Button>
-        </XStack>
+          </View>
+          <View style={{ ...StyleSheet.absoluteFillObject, opacity: blurAmount > 0 ? 1 : 0, zIndex: 2 }}>
+            <BlurView intensity={blurAmount} style={StyleSheet.absoluteFill} tint="light" />
+          </View>
+        </ImageBackground>
       </View>
 
-      {/* Minimal Borderless Filter Bar with Counts, Horizontally Scrollable */}
-      <YStack marginTop={4} marginBottom={8}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 20 }}>
-          <XStack space="$2" alignItems="center" justifyContent="center">
-            {[
-              {
-                label: 'Fresh', value: 'fresh',
-                selectedBg: '#E8F5E8', selectedText: '#388E3C',
-                unselectedBg: '#F3F4F6', unselectedText: '#222',
-                count: freshItems.filter(item => item.status === 'fresh').length,
-              },
-              {
-                label: 'Watch', value: 'watch',
-                selectedBg: '#FFF3E0', selectedText: '#E65100',
-                unselectedBg: '#F3F4F6', unselectedText: '#222',
-                count: freshItems.filter(item => item.status === 'watch').length,
-              },
-              {
-                label: 'Expiring', value: 'expiring',
-                selectedBg: '#FFEBEE', selectedText: '#B71C1C',
-                unselectedBg: '#F3F4F6', unselectedText: '#222',
-                count: freshItems.filter(item => item.status === 'expiring').length,
-              },
-              {
-                label: 'Expired', value: 'expired',
-                selectedBg: '#E0E0E0', selectedText: '#222',
-                unselectedBg: '#F3F4F6', unselectedText: '#222',
-                count: freshItems.filter(item => item.status === 'expired').length,
-              },
-            ].map(({ label, value, selectedBg, selectedText, unselectedBg, unselectedText, count }) => {
-              const isSelected = statusFilter === value;
-              return (
-                <Button
-                  key={value}
-                  size="$2"
-                  borderRadius={20}
-                  backgroundColor={isSelected ? selectedBg : unselectedBg}
-                  borderWidth={0}
-                  paddingHorizontal={16}
-                  paddingVertical={4}
-                  minWidth={0}
-                  elevation={isSelected ? 2 : 1}
-                  shadowOpacity={isSelected ? 0.08 : 0.04}
-                  onPress={() => handleStatusFilter(value as FreshnessStatus)}
-                  pressStyle={{ backgroundColor: selectedBg }}
-                >
-                  <XStack alignItems="center" space={6}>
-                    <Text
-                      fontSize={14}
-                      color={isSelected ? selectedText : unselectedText}
-                      fontWeight={isSelected ? '600' : '500'}
-                    >
-                      {label}
-                    </Text>
-                    <Text
-                      fontSize={13}
-                      color={isSelected ? selectedText : unselectedText}
-                      fontWeight="500"
-                      marginLeft={4}
-                    >
-                      {count}
-                    </Text>
-                  </XStack>
-                </Button>
-              );
-            })}
+      {/* Foreground Layer (scrollable, stops at greeting text) */}
+      <Animated.ScrollView
+        style={{ flex: 1, zIndex: 1 }}
+        contentContainerStyle={{
+          paddingTop: HEADER_HEIGHT,
+          paddingBottom: 100,
+          minHeight: Dimensions.get('window').height + HEADER_HEIGHT,
+        }}
+        scrollEventThrottle={16}
+        onScroll={handleScroll}
+        stickyHeaderIndices={[0]}
+      >
+        {/* Tabs and Filter Bar in unified card */}
+        <View style={styles.tabsFilterCard}>
+          <XStack space={10} alignItems="center">
+            <Button
+              backgroundColor={selected === 'fresh' ? '#E8F5E8' : '#F3F4F6'}
+              borderRadius={20}
+              paddingHorizontal={18}
+              paddingVertical={8}
+              elevation={selected === 'fresh' ? 2 : 1}
+              shadowOpacity={selected === 'fresh' ? 0.08 : 0.04}
+              borderWidth={0}
+              onPress={() => setSelected('fresh')}
+              pressStyle={{ backgroundColor: '#E8F5E8' }}
+            >
+              <Text fontSize={16} color={selected === 'fresh' ? '#388E3C' : '#222'} fontWeight={selected === 'fresh' ? '600' : '500'}>
+                Fresh Items
+              </Text>
+            </Button>
+            <Button
+              backgroundColor={selected === 'pantry' ? '#FFF8E1' : '#F3F4F6'}
+              borderRadius={20}
+              paddingHorizontal={18}
+              paddingVertical={8}
+              elevation={selected === 'pantry' ? 2 : 1}
+              shadowOpacity={selected === 'pantry' ? 0.10 : 0.04}
+              borderWidth={0}
+              onPress={() => setSelected('pantry')}
+              pressStyle={{ backgroundColor: '#FFF8E1' }}
+            >
+              <Text fontSize={16} color={selected === 'pantry' ? '#7B4F19' : '#222'} fontWeight={selected === 'pantry' ? '700' : '500'}>
+                Pantry
+              </Text>
+            </Button>
+            <Button
+              backgroundColor="#388E3C"
+              borderRadius={20}
+              paddingHorizontal={18}
+              paddingVertical={8}
+              elevation={2}
+              shadowOpacity={0.08}
+              borderWidth={0}
+              marginLeft={8}
+              onPress={() => setModalVisible(true)}
+              pressStyle={{ backgroundColor: '#256029' }}
+            >
+              <Text fontSize={16} color="#FFF" fontWeight="600">+ Add</Text>
+            </Button>
           </XStack>
-        </ScrollView>
-      </YStack>
+          <YStack marginTop={8}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 0 }}>
+              <XStack space="$2" alignItems="center" justifyContent="center">
+                {[
+                  {
+                    label: 'Fresh', value: 'fresh',
+                    selectedBg: '#E8F5E8', selectedText: '#388E3C',
+                    unselectedBg: '#F3F4F6', unselectedText: '#222',
+                    count: freshItems.filter(item => item.status === 'fresh').length,
+                  },
+                  {
+                    label: 'Watch', value: 'watch',
+                    selectedBg: '#FFF3E0', selectedText: '#E65100',
+                    unselectedBg: '#F3F4F6', unselectedText: '#222',
+                    count: freshItems.filter(item => item.status === 'watch').length,
+                  },
+                  {
+                    label: 'Expiring', value: 'expiring',
+                    selectedBg: '#FFEBEE', selectedText: '#B71C1C',
+                    unselectedBg: '#F3F4F6', unselectedText: '#222',
+                    count: freshItems.filter(item => item.status === 'expiring').length,
+                  },
+                  {
+                    label: 'Expired', value: 'expired',
+                    selectedBg: '#E0E0E0', selectedText: '#222',
+                    unselectedBg: '#F3F4F6', unselectedText: '#222',
+                    count: freshItems.filter(item => item.status === 'expired').length,
+                  },
+                ].map(({ label, value, selectedBg, selectedText, unselectedBg, unselectedText, count }) => {
+                  const isSelected = statusFilter === value;
+                  return (
+                    <Button
+                      key={value}
+                      size="$2"
+                      borderRadius={20}
+                      backgroundColor={isSelected ? selectedBg : unselectedBg}
+                      borderWidth={0}
+                      paddingHorizontal={16}
+                      paddingVertical={4}
+                      minWidth={0}
+                      elevation={isSelected ? 2 : 1}
+                      shadowOpacity={isSelected ? 0.08 : 0.04}
+                      onPress={() => handleStatusFilter(value as FreshnessStatus)}
+                      pressStyle={{ backgroundColor: selectedBg }}
+                    >
+                      <XStack alignItems="center" space={6}>
+                        <Text
+                          fontSize={14}
+                          color={isSelected ? selectedText : unselectedText}
+                          fontWeight={isSelected ? '600' : '500'}
+                        >
+                          {label}
+                        </Text>
+                        <Text
+                          fontSize={13}
+                          color={isSelected ? selectedText : unselectedText}
+                          fontWeight="500"
+                          marginLeft={4}
+                        >
+                          {count}
+                        </Text>
+                      </XStack>
+                    </Button>
+                  );
+                })}
+              </XStack>
+            </ScrollView>
+          </YStack>
+        </View>
 
-      {/* Content */}
-      {selected === 'fresh' ? (
-        <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100 }}>
-          <YStack space="$4">
+        {/* Content */}
+        {selected === 'fresh' ? (
+          <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100 }}>
+            <YStack space="$4">
 
-            {/* Food Items */}
-            <YStack space="$3">
-              {filteredFreshItems.length > 0 ? (
-                filteredFreshItems.map((item) => (
+              {/* Food Items */}
+              <YStack space="$3">
+                {filteredFreshItems.length > 0 ? (
+                  filteredFreshItems.map((item) => (
             <ItemCard 
               key={item.id}
                     id={item.id}
@@ -318,6 +355,8 @@ export default function FoodScreen({ navigation }: any) {
           </YStack>
         </ScrollView>
       )}
+      {/* End Foreground Layer */}
+      </Animated.ScrollView>
 
       {/* Manual Entry Modal Overlay */}
       <Modal
@@ -387,7 +426,7 @@ const styles = StyleSheet.create({
   },
   greetingTextContainer: {
     marginTop: 25,
-    marginLeft: 0,
+    marginLeft: 20,
     alignItems: 'flex-start',
     backgroundColor: 'transparent',
   },
@@ -405,5 +444,19 @@ const styles = StyleSheet.create({
     opacity: 0.92,
     marginBottom: 0,
     letterSpacing: 0.1,
+  },
+  tabsFilterCard: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 10,
+    width: '100%',
+    marginTop: 0,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
 });
