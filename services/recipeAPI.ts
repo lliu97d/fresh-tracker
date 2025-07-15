@@ -5,6 +5,136 @@ import { Recipe, RecipeIngredient, FoodItem } from '../store/types';
 const SPOONACULAR_BASE_URL = 'https://api.spoonacular.com/recipes';
 const SPOONACULAR_API_KEY = '10f3c6ab3ce6470faa705a6151db778a';
 
+// Fallback sample recipes when API is unavailable
+const FALLBACK_RECIPES: Recipe[] = [
+  {
+    id: 'fallback-1',
+    name: 'Quick Banana Smoothie Bowl',
+    cuisine: 'American',
+    time: '10 min',
+    ingredients: [
+      { name: 'Banana', amount: 1, unit: 'piece' },
+      { name: 'Greek yogurt', amount: 200, unit: 'g' },
+      { name: 'Honey', amount: 15, unit: 'ml' },
+      { name: 'Granola', amount: 30, unit: 'g' },
+      { name: 'Mixed berries', amount: 50, unit: 'g' },
+    ],
+    instructions: [
+      'Blend banana with yogurt and honey until smooth',
+      'Pour into a bowl',
+      'Top with granola and fresh berries',
+      'Serve immediately'
+    ],
+    difficulty: 'easy',
+    servings: 1,
+    calories: 320,
+    tags: ['Breakfast', 'Healthy', 'Quick', 'Vegetarian'],
+    imageUrl: 'https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?w=400',
+  },
+  {
+    id: 'fallback-2',
+    name: 'Spinach Quinoa Salad',
+    cuisine: 'Mediterranean',
+    time: '20 min',
+    ingredients: [
+      { name: 'Quinoa', amount: 100, unit: 'g' },
+      { name: 'Fresh spinach', amount: 50, unit: 'g' },
+      { name: 'Cherry tomatoes', amount: 100, unit: 'g' },
+      { name: 'Cucumber', amount: 1, unit: 'piece' },
+      { name: 'Olive oil', amount: 15, unit: 'ml' },
+      { name: 'Lemon juice', amount: 10, unit: 'ml' },
+    ],
+    instructions: [
+      'Cook quinoa according to package instructions',
+      'Chop vegetables and mix in a bowl',
+      'Add cooked quinoa to vegetables',
+      'Dress with olive oil and lemon juice',
+      'Season with salt and pepper to taste'
+    ],
+    difficulty: 'easy',
+    servings: 2,
+    calories: 280,
+    tags: ['Lunch', 'Vegetarian', 'Protein', 'Healthy'],
+    imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
+  },
+  {
+    id: 'fallback-3',
+    name: 'Greek Yogurt Parfait',
+    cuisine: 'Greek',
+    time: '5 min',
+    ingredients: [
+      { name: 'Greek yogurt', amount: 150, unit: 'g' },
+      { name: 'Honey', amount: 10, unit: 'ml' },
+      { name: 'Mixed berries', amount: 50, unit: 'g' },
+      { name: 'Nuts', amount: 20, unit: 'g' },
+    ],
+    instructions: [
+      'Layer yogurt in a glass or bowl',
+      'Drizzle with honey',
+      'Add fresh berries',
+      'Sprinkle with chopped nuts',
+      'Serve immediately'
+    ],
+    difficulty: 'easy',
+    servings: 1,
+    calories: 250,
+    tags: ['Snack', 'Healthy', 'Quick', 'Protein'],
+    imageUrl: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400',
+  },
+  {
+    id: 'fallback-4',
+    name: 'Avocado Toast with Eggs',
+    cuisine: 'International',
+    time: '15 min',
+    ingredients: [
+      { name: 'Bread', amount: 2, unit: 'slices' },
+      { name: 'Avocado', amount: 1, unit: 'piece' },
+      { name: 'Eggs', amount: 2, unit: 'pieces' },
+      { name: 'Salt', amount: 1, unit: 'pinch' },
+      { name: 'Black pepper', amount: 1, unit: 'pinch' },
+    ],
+    instructions: [
+      'Toast bread until golden brown',
+      'Mash avocado and spread on toast',
+      'Fry or poach eggs to your preference',
+      'Place eggs on top of avocado',
+      'Season with salt and pepper'
+    ],
+    difficulty: 'easy',
+    servings: 1,
+    calories: 350,
+    tags: ['Breakfast', 'Protein', 'Quick', 'Healthy'],
+    imageUrl: 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?w=400',
+  },
+  {
+    id: 'fallback-5',
+    name: 'Simple Pasta with Vegetables',
+    cuisine: 'Italian',
+    time: '25 min',
+    ingredients: [
+      { name: 'Pasta', amount: 200, unit: 'g' },
+      { name: 'Broccoli', amount: 100, unit: 'g' },
+      { name: 'Cherry tomatoes', amount: 100, unit: 'g' },
+      { name: 'Olive oil', amount: 30, unit: 'ml' },
+      { name: 'Garlic', amount: 2, unit: 'cloves' },
+      { name: 'Parmesan cheese', amount: 30, unit: 'g' },
+    ],
+    instructions: [
+      'Cook pasta according to package instructions',
+      'Steam broccoli until tender',
+      'Sauté garlic in olive oil',
+      'Add tomatoes and cook for 2 minutes',
+      'Combine pasta, vegetables, and cheese',
+      'Season with salt and pepper'
+    ],
+    difficulty: 'medium',
+    servings: 2,
+    calories: 450,
+    tags: ['Dinner', 'Vegetarian', 'Pasta', 'Italian'],
+    imageUrl: 'https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?w=400',
+  },
+];
+
 // Spoonacular API response types
 interface SpoonacularRecipe {
   id: number;
@@ -55,6 +185,7 @@ interface SpoonacularSearchResponse {
 
 class RecipeAPIService {
   private apiKey: string;
+  private isApiAvailable: boolean = true;
 
   constructor() {
     this.apiKey = SPOONACULAR_API_KEY;
@@ -63,6 +194,52 @@ class RecipeAPIService {
   // Set API key
   setApiKey(apiKey: string) {
     this.apiKey = apiKey;
+    this.isApiAvailable = true; // Reset availability when new key is set
+  }
+
+  // Check if API is available (not rate limited)
+  private async checkApiAvailability(): Promise<boolean> {
+    if (!this.isApiAvailable) return false;
+    
+    try {
+      // Make a simple test request
+      await axios.get(`${SPOONACULAR_BASE_URL}/complexSearch`, {
+        params: {
+          apiKey: this.apiKey,
+          query: 'test',
+          number: 1,
+        },
+      });
+      
+      return true;
+    } catch (error: any) {
+      if (error.response?.status === 402) {
+        this.isApiAvailable = false;
+        return false;
+      }
+      
+      return true; // Other errors might be temporary
+    }
+  }
+
+  // Get fallback recipes based on ingredients
+  private getFallbackRecipes(ingredients: string[]): Recipe[] {
+    if (ingredients.length === 0) {
+      return FALLBACK_RECIPES;
+    }
+
+    // Filter fallback recipes based on available ingredients
+    return FALLBACK_RECIPES.filter(recipe => {
+      const recipeIngredients = recipe.ingredients.map(ing => ing.name.toLowerCase());
+      const availableIngredients = ingredients.map(ing => ing.toLowerCase());
+      
+      // Check if recipe uses any of the available ingredients
+      return availableIngredients.some(available => 
+        recipeIngredients.some(recipeIng => 
+          recipeIng.includes(available) || available.includes(recipeIng)
+        )
+      );
+    });
   }
 
   // Search recipes by ingredients (perfect for using expiring items)
@@ -73,6 +250,13 @@ class RecipeAPIService {
     number: number = 10
   ): Promise<Recipe[]> {
     try {
+      // Check if API is available
+      const apiAvailable = await this.checkApiAvailability();
+      if (!apiAvailable) {
+        console.log('Using fallback recipes due to API unavailability');
+        return this.getFallbackRecipes(ingredients);
+      }
+
       const response = await axios.get(
         `${SPOONACULAR_BASE_URL}/findByIngredients`,
         {
@@ -92,9 +276,17 @@ class RecipeAPIService {
       );
 
       return detailedRecipes.filter(Boolean);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error finding recipes by ingredients:', error);
-      return [];
+      
+      // Handle 402 error specifically
+      if (error.response?.status === 402) {
+        console.warn('API limit exceeded, using fallback recipes');
+        this.isApiAvailable = false;
+        return this.getFallbackRecipes(ingredients);
+      }
+      
+      return this.getFallbackRecipes(ingredients);
     }
   }
 
@@ -111,8 +303,13 @@ class RecipeAPIService {
       );
 
       return this.mapSpoonacularToRecipe(response.data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error getting recipe information:', error);
+      
+      if (error.response?.status === 402) {
+        this.isApiAvailable = false;
+      }
+      
       return null;
     }
   }
@@ -127,6 +324,13 @@ class RecipeAPIService {
     number: number = 10
   ): Promise<Recipe[]> {
     try {
+      // Check if API is available
+      const apiAvailable = await this.checkApiAvailability();
+      if (!apiAvailable) {
+        console.log('Using fallback recipes due to API unavailability');
+        return this.getFallbackRecipes([query]);
+      }
+
       const params: any = {
         apiKey: this.apiKey,
         query,
@@ -146,9 +350,17 @@ class RecipeAPIService {
       );
 
       return response.data.results.map(recipe => this.mapSpoonacularToRecipe(recipe));
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error searching recipes:', error);
-      return [];
+      
+      // Handle 402 error specifically
+      if (error.response?.status === 402) {
+        console.warn('API limit exceeded, using fallback recipes');
+        this.isApiAvailable = false;
+        return this.getFallbackRecipes([query]);
+      }
+      
+      return this.getFallbackRecipes([query]);
     }
   }
 
@@ -214,7 +426,7 @@ class RecipeAPIService {
       });
     } catch (error) {
       console.error('Error getting personalized suggestions:', error);
-      return [];
+      return this.getFallbackRecipes(inventory.map(item => item.name));
     }
   }
 
@@ -256,6 +468,23 @@ class RecipeAPIService {
     if (readyInMinutes <= 30) return 'easy';
     if (readyInMinutes <= 60) return 'medium';
     return 'hard';
+  }
+
+  // Reset API availability (useful for testing or when switching API keys)
+  resetApiAvailability() {
+    this.isApiAvailable = true;
+  }
+
+  // Get API status
+  getApiStatus(): { available: boolean; message: string } {
+    if (this.isApiAvailable) {
+      return { available: true, message: 'API is available' };
+    } else {
+      return { 
+        available: false, 
+        message: 'API limit exceeded - using fallback recipes. Consider upgrading your Spoonacular plan or waiting until tomorrow.' 
+      };
+    }
   }
 }
 
