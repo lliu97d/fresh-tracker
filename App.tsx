@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useCallback } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
@@ -6,10 +7,15 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { TamaguiProvider } from 'tamagui';
 import config from './tamagui.config';
 import TabNavigator from './navigation/TabNavigator';
+import AuthNavigator from './navigation/AuthNavigator';
+import SampleFoodScreen from './screens/SampleFoodScreen';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useStore } from './store';
 
-export default function App() {
-  const { initializeStore, isLoading, isInitialized } = useStore();
+function AppContent() {
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { initializeStore, isLoading: storeLoading, isInitialized } = useStore();
+  const [showAuth, setShowAuth] = React.useState(false);
 
   React.useEffect(() => {
     if (!isInitialized) {
@@ -17,7 +23,36 @@ export default function App() {
     }
   }, [isInitialized, initializeStore]);
 
-  if (isLoading || !isInitialized) {
+  React.useEffect(() => {
+    // No logging here as per original file
+  }, [isAuthenticated, authLoading, user]);
+
+  const handleLoginSuccess = useCallback(() => {
+    // User is now authenticated, store will be initialized
+    // The app will automatically navigate to the Food screen (initial route)
+    setShowAuth(false);
+  }, [user]);
+
+  const handleSignUpSuccess = useCallback(() => {
+    // User signed up successfully, store will be initialized
+    // The app will automatically navigate to the Food screen (initial route)
+    setShowAuth(false);
+  }, [user]);
+
+  const handleLoginPress = useCallback(() => {
+    setShowAuth(true);
+  }, []);
+
+  const handleSignUpPress = useCallback(() => {
+    setShowAuth(true);
+  }, []);
+
+  const handleGoBack = useCallback(() => {
+    setShowAuth(false);
+  }, []);
+
+  // Show loading screen while auth or store is initializing
+  if (authLoading || storeLoading || !isInitialized) {
     return (
       <GestureHandlerRootView style={{ flex: 1 }}>
         <TamaguiProvider config={config}>
@@ -37,13 +72,29 @@ export default function App() {
       <TamaguiProvider config={config}>
         <SafeAreaProvider>
           <NavigationContainer>
-            <SafeAreaView style={{ flex: 1, backgroundColor: '#f3f4f6' }} edges={['top', 'bottom']}>
-              <TabNavigator />
-            </SafeAreaView>
+            {showAuth ? (
+              <AuthNavigator 
+                onLoginSuccess={handleLoginSuccess}
+                onSignUpSuccess={handleSignUpSuccess}
+                onGoBack={handleGoBack}
+              />
+            ) : (
+              <SafeAreaView style={{ flex: 1, backgroundColor: 'white' }} edges={['top', 'bottom']}>
+                <TabNavigator onLoginPress={handleLoginPress} onSignUpPress={handleSignUpPress} />
+              </SafeAreaView>
+            )}
           </NavigationContainer>
         </SafeAreaProvider>
       </TamaguiProvider>
     </GestureHandlerRootView>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

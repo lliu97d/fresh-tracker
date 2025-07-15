@@ -6,8 +6,11 @@ import ItemCard, { FreshnessStatus } from '../components/ItemCard';
 import PantryCard from '../components/PantryCard';
 import HeaderBar from '../components/HeaderBar';
 import EmptyState from '../components/EmptyState';
+import UnlockBanner from '../components/UnlockBanner';
 import { useStore } from '../store';
+import { useAuth } from '../contexts/AuthContext';
 import ManualEntryScreen from './ManualEntryScreen';
+import { Ionicons } from '@expo/vector-icons';
 
 function getGreeting() {
   const hour = new Date().getHours();
@@ -16,8 +19,157 @@ function getGreeting() {
   return 'Good evening';
 }
 
-export default function FoodScreen({ navigation }: any) {
+// Sample food items to showcase the app for unauthenticated users
+const sampleFreshItems = [
+  {
+    id: '1',
+    name: 'Organic Bananas',
+    quantity: 6,
+    originalQuantity: 6,
+    unit: 'pcs',
+    category: 'Fruits',
+    status: 'fresh' as const,
+    expiresInDays: 5,
+    calories: 89,
+    expirationDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: '2',
+    name: 'Fresh Spinach',
+    quantity: 200,
+    originalQuantity: 200,
+    unit: 'g',
+    category: 'Vegetables',
+    status: 'watch' as const,
+    expiresInDays: 2,
+    calories: 23,
+    expirationDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: '3',
+    name: 'Greek Yogurt',
+    quantity: 500,
+    originalQuantity: 500,
+    unit: 'ml',
+    category: 'Dairy',
+    status: 'expiring' as const,
+    expiresInDays: 1,
+    calories: 59,
+    expirationDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+  },
+];
+
+const samplePantryItems = [
+  {
+    id: '4',
+    name: 'Quinoa',
+    quantity: 500,
+    originalQuantity: 500,
+    unit: 'g',
+    category: 'Pantry',
+    status: 'fresh' as const,
+    expiresInDays: 365,
+    calories: 120,
+    expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+  },
+  {
+    id: '5',
+    name: 'Olive Oil',
+    quantity: 250,
+    originalQuantity: 250,
+    unit: 'ml',
+    category: 'Oils',
+    status: 'fresh' as const,
+    expiresInDays: 730,
+    calories: 884,
+    expirationDate: new Date(Date.now() + 730 * 24 * 60 * 60 * 1000),
+  },
+];
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'fresh': return '#388E3C';
+    case 'watch': return '#E65100';
+    case 'expiring': return '#B71C1C';
+    case 'expired': return '#666666';
+    default: return '#388E3C';
+  }
+};
+
+const getStatusBackground = (status: string) => {
+  switch (status) {
+    case 'fresh': return '#E8F5E8';
+    case 'watch': return '#FFF3E0';
+    case 'expiring': return '#FFEBEE';
+    case 'expired': return '#F5F5F5';
+    default: return '#E8F5E8';
+  }
+};
+
+const SampleFoodCard = ({ item }: { item: any }) => (
+  <Card
+    backgroundColor="#FFF"
+    borderRadius={16}
+    padding={16}
+    marginBottom={12}
+    elevation={2}
+    shadowOpacity={0.08}
+    borderWidth={1}
+    borderColor="#F0F0F0"
+  >
+    <XStack justifyContent="space-between" alignItems="flex-start" marginBottom={8}>
+      <YStack flex={1}>
+        <Text fontSize={18} fontWeight="600" color="#222" marginBottom={4}>
+          {item.name}
+        </Text>
+        <Text fontSize={14} color="#666" marginBottom={4}>
+          {item.quantity} {item.unit} • {item.category}
+        </Text>
+        <Text fontSize={14} color="#666">
+          {item.calories} calories per 100g
+        </Text>
+      </YStack>
+      <View style={{
+        backgroundColor: getStatusBackground(item.status),
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: getStatusColor(item.status) + '20',
+      }}>
+        <Text fontSize={12} fontWeight="600" color={getStatusColor(item.status)}>
+          {item.status === 'fresh' ? 'Fresh' :
+           item.status === 'watch' ? 'Watch' :
+           item.status === 'expiring' ? 'Expiring' :
+           'Expired'}
+        </Text>
+      </View>
+    </XStack>
+    
+    <XStack alignItems="center" space={8}>
+      <Ionicons 
+        name={item.expiresInDays <= 1 ? "warning" : "time"} 
+        size={16} 
+        color={item.expiresInDays <= 1 ? "#B71C1C" : "#666"} 
+      />
+      <Text fontSize={14} color={item.expiresInDays <= 1 ? "#B71C1C" : "#666"}>
+        {item.expiresInDays <= 1 
+          ? `Expires today!` 
+          : `Expires in ${item.expiresInDays} days`
+        }
+      </Text>
+    </XStack>
+  </Card>
+);
+
+interface FoodScreenProps {
+  onLoginPress?: () => void;
+  onSignUpPress?: () => void;
+}
+
+export default function FoodScreen({ navigation, onLoginPress, onSignUpPress }: FoodScreenProps & any) {
   const { foodItems, getFoodItemsByLocation, deleteFoodItem, updateFoodItem, userProfile } = useStore();
+  const { user, isAuthenticated } = useAuth();
   const [selected, setSelected] = useState<'fresh' | 'pantry'>('fresh');
   const [statusFilter, setStatusFilter] = useState<FreshnessStatus | null>(null);
   const screenHeight = Dimensions.get('window').height;
@@ -65,8 +217,9 @@ export default function FoodScreen({ navigation }: any) {
     })
   ).current;
   
-  const freshItems = getFoodItemsByLocation('fresh');
-  const pantryItems = getFoodItemsByLocation('pantry');
+  // Use sample data for unauthenticated users, real data for authenticated users
+  const freshItems = isAuthenticated ? getFoodItemsByLocation('fresh') : sampleFreshItems;
+  const pantryItems = isAuthenticated ? getFoodItemsByLocation('pantry') : samplePantryItems;
   
   // Filter items based on status filter
   const filteredFreshItems = statusFilter 
@@ -93,6 +246,17 @@ export default function FoodScreen({ navigation }: any) {
     setStatusFilter(null);
   };
 
+  // Get user display name for greeting
+  const getUserDisplayName = () => {
+    if (user?.displayName) return user.displayName;
+    if (userProfile?.name) return userProfile.name;
+    if (user?.email) return user.email.split('@')[0];
+    return 'there';
+  };
+
+  // Check if this is a new user (no food items yet)
+  const isNewUser = freshItems.length === 0 && pantryItems.length === 0;
+
   return (
     <View style={{ flex: 1, backgroundColor: '#F6F7FB' }}>
       {/* Modern Header with Dynamic Greeting and Tabs */}
@@ -108,10 +272,15 @@ export default function FoodScreen({ navigation }: any) {
         }}
       >
         <Text fontSize={26} fontWeight="700" color="#222" style={{ marginBottom: 8 }}>
-          {getGreeting()}{userProfile?.name ? `, ${userProfile.name}` : ''}
+          {getGreeting()}, {isAuthenticated ? getUserDisplayName() : 'Food Lover'}!
         </Text>
         <Text fontSize={18} fontWeight="400" color="#666" style={{ marginBottom: 18 }}>
-          Today is going to be a good day.
+          {!isAuthenticated 
+            ? "Discover how FreshTracker can transform your food management"
+            : isNewUser 
+              ? "Welcome to FreshTracker! Let's start by adding your first food item."
+              : "Today is going to be a good day."
+          }
         </Text>
         {/* Tabs for Fresh Items and Pantry, with Add button */}
         <XStack space={10} alignItems="center">
@@ -145,22 +314,32 @@ export default function FoodScreen({ navigation }: any) {
               Pantry
             </Text>
           </Button>
-          <Button
-            backgroundColor="#388E3C"
-            borderRadius={20}
-            paddingHorizontal={18}
-            paddingVertical={8}
-            elevation={2}
-            shadowOpacity={0.08}
-            borderWidth={0}
-            marginLeft={8}
-            onPress={() => setModalVisible(true)}
-            pressStyle={{ backgroundColor: '#256029' }}
-          >
-            <Text fontSize={16} color="#FFF" fontWeight="600">+ Add</Text>
-          </Button>
+          {isAuthenticated && (
+            <Button
+              backgroundColor="#388E3C"
+              borderRadius={20}
+              paddingHorizontal={18}
+              paddingVertical={8}
+              elevation={2}
+              shadowOpacity={0.08}
+              borderWidth={0}
+              marginLeft={8}
+              onPress={() => setModalVisible(true)}
+              pressStyle={{ backgroundColor: '#256029' }}
+            >
+              <Text fontSize={16} color="#FFF" fontWeight="600">+ Add</Text>
+            </Button>
+          )}
         </XStack>
       </View>
+
+      {/* Unlock Banner for Unauthenticated Users */}
+      {!isAuthenticated && (
+        <UnlockBanner
+          onLoginPress={onLoginPress}
+          onSignUpPress={onSignUpPress}
+        />
+      )}
 
       {/* Minimal Borderless Filter Bar with Counts, Horizontally Scrollable */}
       <YStack marginTop={4} marginBottom={8}>
@@ -232,6 +411,40 @@ export default function FoodScreen({ navigation }: any) {
         </ScrollView>
       </YStack>
 
+      {/* Welcome Banner for New Users */}
+      {isNewUser && (
+        <Card
+          backgroundColor="#E8F5E8"
+          borderRadius={16}
+          marginHorizontal={20}
+          marginBottom={16}
+          padding={16}
+          elevation={2}
+          shadowOpacity={0.08}
+        >
+          <XStack alignItems="center" space={12}>
+            <View style={{
+              width: 48,
+              height: 48,
+              borderRadius: 24,
+              backgroundColor: '#388E3C',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}>
+              <Text fontSize={24} color="#FFF">🍎</Text>
+            </View>
+            <YStack flex={1}>
+              <Text fontSize={16} fontWeight="600" color="#388E3C" marginBottom={4}>
+                Welcome to FreshTracker!
+              </Text>
+              <Text fontSize={14} color="#2E7D32" lineHeight={20}>
+                Start tracking your food by adding your first item. You can scan barcodes or enter items manually.
+              </Text>
+            </YStack>
+          </XStack>
+        </Card>
+      )}
+
       {/* Content */}
       {selected === 'fresh' ? (
         <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100 }}>
@@ -241,21 +454,25 @@ export default function FoodScreen({ navigation }: any) {
             <YStack space="$3">
               {filteredFreshItems.length > 0 ? (
                 filteredFreshItems.map((item) => (
-                  <ItemCard 
-                    key={item.id}
-                    id={item.id}
-                    name={item.name}
-                    quantity={item.quantity}
-                    originalQuantity={item.originalQuantity}
-                    unit={item.unit}
-                    category={item.category}
-                    calories={`${item.calories || 0} per 100g`}
-                    expiresInDays={Math.ceil((item.expirationDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}
-                    status={item.status}
-                    onViewRecipes={() => {}}
-                    onUpdateQty={handleUpdateQuantity}
-                    onDelete={handleDeleteItem}
-                  />
+                  isAuthenticated ? (
+                    <ItemCard 
+                      key={item.id}
+                      id={item.id}
+                      name={item.name}
+                      quantity={item.quantity}
+                      originalQuantity={item.originalQuantity}
+                      unit={item.unit}
+                      category={item.category}
+                      calories={`${item.calories || 0} per 100g`}
+                      expiresInDays={Math.ceil((item.expirationDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}
+                      status={item.status}
+                      onViewRecipes={() => {}}
+                      onUpdateQty={handleUpdateQuantity}
+                      onDelete={handleDeleteItem}
+                    />
+                  ) : (
+                    <SampleFoodCard key={item.id} item={item} />
+                  )
                 ))
               ) : (
                 <EmptyState
@@ -281,21 +498,25 @@ export default function FoodScreen({ navigation }: any) {
             <YStack space="$3">
               {pantryItems.length > 0 ? (
                 pantryItems.map((item) => (
-                  <PantryCard
-                    key={item.id}
-                    id={item.id}
-                    name={item.name}
-                    quantity={item.quantity}
-                    originalQuantity={item.originalQuantity}
-                    unit={item.unit}
-                    category={item.category}
-                    calories={`${item.calories || 0} per 100g`}
-                    expiresInDays={Math.ceil((item.expirationDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}
-                    status={item.status}
-                    onViewRecipes={() => {}}
-                    onUpdateQty={handleUpdateQuantity}
-                    onDelete={handleDeleteItem}
-                  />
+                  isAuthenticated ? (
+                    <PantryCard
+                      key={item.id}
+                      id={item.id}
+                      name={item.name}
+                      quantity={item.quantity}
+                      originalQuantity={item.originalQuantity}
+                      unit={item.unit}
+                      category={item.category}
+                      calories={`${item.calories || 0} per 100g`}
+                      expiresInDays={Math.ceil((item.expirationDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))}
+                      status={item.status}
+                      onViewRecipes={() => {}}
+                      onUpdateQty={handleUpdateQuantity}
+                      onDelete={handleDeleteItem}
+                    />
+                  ) : (
+                    <SampleFoodCard key={item.id} item={item} />
+                  )
                 ))
               ) : (
                 <EmptyState

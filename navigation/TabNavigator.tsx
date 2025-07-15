@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Platform } from 'react-native';
@@ -15,10 +15,25 @@ import { Home, BookOpen, User } from '@tamagui/lucide-icons';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-function FoodStack() {
+interface TabNavigatorProps {
+  onLoginPress?: () => void;
+  onSignUpPress?: () => void;
+}
+
+function FoodStack({ onLoginPress, onSignUpPress }: TabNavigatorProps) {
+  // Memoize FoodScreen component to prevent inline function warnings
+  const FoodScreenComponent = useCallback((props: any) => (
+    <FoodScreen {...props} onLoginPress={onLoginPress} onSignUpPress={onSignUpPress} />
+  ), [onLoginPress, onSignUpPress]);
+
   return (
     <Stack.Navigator>
-      <Stack.Screen name="FoodMain" component={FoodScreen} options={{ title: 'Food', headerShown: false }} />
+      <Stack.Screen 
+        name="FoodMain" 
+        options={{ title: 'Food', headerShown: false }}
+      >
+        {FoodScreenComponent}
+      </Stack.Screen>
       <Stack.Screen name="BarcodeScanner" component={BarcodeScannerScreen} options={{ title: 'Scan Barcode' }} />
       <Stack.Screen name="ManualEntry" component={ManualEntryScreen} options={{ title: 'Manual Entry' }} />
     </Stack.Navigator>
@@ -34,10 +49,21 @@ function RecipesStack() {
   );
 }
 
-export default function TabNavigator() {
+export default function TabNavigator({ onLoginPress, onSignUpPress }: TabNavigatorProps) {
   const insets = useSafeAreaInsets();
+  
+  // Memoize screen components to prevent inline function warnings
+  const FoodStackComponent = useCallback((props: any) => (
+    <FoodStack {...props} onLoginPress={onLoginPress} onSignUpPress={onSignUpPress} />
+  ), [onLoginPress, onSignUpPress]);
+
+  const ProfileScreenComponent = useCallback((props: any) => (
+    <ProfileScreen {...props} onLoginPress={onLoginPress} onSignUpPress={onSignUpPress} />
+  ), [onLoginPress, onSignUpPress]);
+  
   return (
     <Tab.Navigator
+      initialRouteName="Food"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           // Use lucide-icons for a modern look
@@ -82,15 +108,16 @@ export default function TabNavigator() {
     >
       <Tab.Screen 
         name="Food" 
-        component={FoodStack} 
         options={{ 
           headerShown: false,
           tabBarLabel: 'Home',
         }} 
-      />
+      >
+        {FoodStackComponent}
+      </Tab.Screen>
       <Tab.Screen 
         name="Recipes" 
-        component={RecipesStack} 
+        component={RecipesStack}
         options={{ 
           headerShown: false,
           tabBarLabel: 'Recipes',
@@ -98,12 +125,13 @@ export default function TabNavigator() {
       />
       <Tab.Screen 
         name="Profile" 
-        component={ProfileScreen} 
         options={{ 
           headerShown: false,
           tabBarLabel: 'Profile',
-        }} 
-      />
+        }}
+      >
+        {ProfileScreenComponent}
+      </Tab.Screen>
     </Tab.Navigator>
   );
 } 

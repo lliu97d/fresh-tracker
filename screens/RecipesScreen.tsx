@@ -5,6 +5,89 @@ import { Ionicons } from '@expo/vector-icons';
 import HeaderBar from '../components/HeaderBar';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useStore } from '../store';
+import { useAuth } from '../contexts/AuthContext';
+import recipeAPI from '../services/recipeAPI';
+
+// Sample recipe data for unauthenticated users
+const sampleRecipes = [
+  {
+    id: '1',
+    name: 'Banana Smoothie Bowl',
+    title: 'Banana Smoothie Bowl',
+    image: 'https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?w=400',
+    readyInMinutes: 10,
+    time: '10 min',
+    servings: 2,
+    calories: 320,
+    cuisine: 'American',
+    ingredients: [
+      { name: 'Banana', amount: 1, unit: 'piece' },
+      { name: 'Greek yogurt', amount: 200, unit: 'g' },
+      { name: 'Honey', amount: 15, unit: 'ml' },
+      { name: 'Granola', amount: 30, unit: 'g' },
+      { name: 'Berries', amount: 50, unit: 'g' },
+    ],
+    instructions: 'Blend banana with yogurt and honey. Top with granola and fresh berries.',
+    tags: ['Breakfast', 'Healthy', 'Quick'],
+    nutrition: {
+      calories: 320,
+      protein: 12,
+      carbs: 45,
+      fat: 8,
+    },
+  },
+  {
+    id: '2',
+    name: 'Spinach Quinoa Salad',
+    title: 'Spinach Quinoa Salad',
+    image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400',
+    readyInMinutes: 20,
+    time: '20 min',
+    servings: 4,
+    calories: 280,
+    cuisine: 'Mediterranean',
+    ingredients: [
+      { name: 'Quinoa', amount: 100, unit: 'g' },
+      { name: 'Fresh spinach', amount: 50, unit: 'g' },
+      { name: 'Cherry tomatoes', amount: 100, unit: 'g' },
+      { name: 'Cucumber', amount: 1, unit: 'piece' },
+      { name: 'Olive oil', amount: 15, unit: 'ml' },
+    ],
+    instructions: 'Cook quinoa, mix with fresh vegetables, and dress with olive oil and lemon.',
+    tags: ['Lunch', 'Vegetarian', 'Protein'],
+    nutrition: {
+      calories: 280,
+      protein: 10,
+      carbs: 35,
+      fat: 12,
+    },
+  },
+  {
+    id: '3',
+    name: 'Greek Yogurt Parfait',
+    title: 'Greek Yogurt Parfait',
+    image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=400',
+    readyInMinutes: 5,
+    time: '5 min',
+    servings: 1,
+    calories: 250,
+    cuisine: 'Greek',
+    ingredients: [
+      { name: 'Greek yogurt', amount: 150, unit: 'g' },
+      { name: 'Honey', amount: 10, unit: 'ml' },
+      { name: 'Mixed berries', amount: 50, unit: 'g' },
+      { name: 'Nuts', amount: 20, unit: 'g' },
+    ],
+    instructions: 'Layer yogurt with honey, berries, and nuts for a healthy snack.',
+    tags: ['Snack', 'Healthy', 'Quick'],
+    nutrition: {
+      calories: 250,
+      protein: 15,
+      carbs: 30,
+      fat: 10,
+    },
+  },
+];
 
 export default function RecipesScreen({ navigation }: any) {
   const { 
@@ -17,6 +100,7 @@ export default function RecipesScreen({ navigation }: any) {
     isLoadingRecipes,
     foodItems 
   } = useStore();
+  const { isAuthenticated } = useAuth();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -53,6 +137,13 @@ export default function RecipesScreen({ navigation }: any) {
   };
 
   const hasExpiringItems = foodItems.some(item => item.status === 'expiring' || item.status === 'watch');
+  
+  // Use sample data for unauthenticated users
+  const displayRecipes = isAuthenticated ? recipes : sampleRecipes;
+  const displayLoading = isAuthenticated ? isLoadingRecipes : false;
+  
+  // Check API status for authenticated users
+  const apiStatus = isAuthenticated ? recipeAPI.getApiStatus() : null;
 
   return (
     <View style={{ flex: 1 }}>
@@ -79,38 +170,42 @@ export default function RecipesScreen({ navigation }: any) {
       {/* Action Buttons */}
       <View style={styles.actionRow}>
         <View style={styles.actionButtonsContainer}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={forceReloadRecipes}
-            disabled={isLoadingRecipes}
-          >
-            <Ionicons name="refresh" size={20} color="#2563eb" />
-            <Text style={styles.actionButtonText}>Refresh</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.actionButton, styles.clearButton]}
-            onPress={() => {
-              clearRecipes();
-              forceReloadRecipes();
-            }}
-            disabled={isLoadingRecipes}
-          >
-            <Ionicons name="trash-outline" size={20} color="#dc2626" />
-            <Text style={[styles.actionButtonText, styles.clearButtonText]}>Clear</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity
-            style={[styles.actionButton, styles.resetButton]}
-            onPress={async () => {
-              await resetRecipes();
-              forceReloadRecipes();
-            }}
-            disabled={isLoadingRecipes}
-          >
-            <Ionicons name="refresh-circle-outline" size={20} color="#059669" />
-            <Text style={[styles.actionButtonText, styles.resetButtonText]}>Reset</Text>
-          </TouchableOpacity>
+          {isAuthenticated && (
+            <>
+              <TouchableOpacity
+                style={styles.actionButton}
+                onPress={forceReloadRecipes}
+                disabled={isLoadingRecipes}
+              >
+                <Ionicons name="refresh" size={20} color="#2563eb" />
+                <Text style={styles.actionButtonText}>Refresh</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.actionButton, styles.clearButton]}
+                onPress={() => {
+                  clearRecipes();
+                  forceReloadRecipes();
+                }}
+                disabled={isLoadingRecipes}
+              >
+                <Ionicons name="trash-outline" size={20} color="#dc2626" />
+                <Text style={[styles.actionButtonText, styles.clearButtonText]}>Clear</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.actionButton, styles.resetButton]}
+                onPress={async () => {
+                  await resetRecipes();
+                  forceReloadRecipes();
+                }}
+                disabled={isLoadingRecipes}
+              >
+                <Ionicons name="refresh-circle-outline" size={20} color="#059669" />
+                <Text style={[styles.actionButtonText, styles.resetButtonText]}>Reset</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
         
         <TouchableOpacity
@@ -123,30 +218,40 @@ export default function RecipesScreen({ navigation }: any) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {isLoadingRecipes ? (
+        {displayLoading ? (
           <LoadingSpinner />
         ) : (
           <>
             <View style={styles.noteBox}>
               <Text style={styles.noteText}>
-                {hasExpiringItems 
-                  ? '🍳 Smart suggestions based on your expiring items and preferences!'
-                  : '🍳 Discover delicious recipes tailored to your preferences!'
+                {!isAuthenticated 
+                  ? '🍳 Sample recipes to show you what FreshTracker can do!'
+                  : hasExpiringItems 
+                    ? '🍳 Smart suggestions based on your expiring items and preferences!'
+                    : '🍳 Discover delicious recipes tailored to your preferences!'
                 }
               </Text>
+              {apiStatus && !apiStatus.available && (
+                <Text style={[styles.noteText, { color: '#e65100', fontSize: 12, marginTop: 8 }]}>
+                  ⚠️ {apiStatus.message}
+                </Text>
+              )}
             </View>
             
-            {recipes.length === 0 ? (
+            {displayRecipes.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="restaurant-outline" size={48} color="#ccc" />
                 <Text style={styles.emptyStateText}>No recipes found</Text>
                 <Text style={styles.emptyStateSubtext}>
-                  Try searching for a recipe or refresh for personalized suggestions
+                  {isAuthenticated 
+                    ? 'Try searching for a recipe or refresh for personalized suggestions'
+                    : 'Sign up to get personalized recipe suggestions!'
+                  }
                 </Text>
               </View>
             ) : (
-              recipes.map((recipe) => (
-                <RecipeCard key={recipe.id} {...recipe} userInventory={foodItems} />
+              displayRecipes.map((recipe) => (
+                <RecipeCard key={recipe.id} {...recipe} userInventory={isAuthenticated ? foodItems : []} />
               ))
             )}
           </>
