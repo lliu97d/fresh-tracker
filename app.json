@@ -32,6 +32,11 @@
     "plugins": [
       "expo-barcode-scanner",
       "expo-dev-client"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "87ab1892-1cfa-4844-a953-02e9cecc9be9"
+      }
+    }
   }
 }
