@@ -8,7 +8,6 @@ import ItemCard, { FreshnessStatus } from '../components/ItemCard';
 import PantryCard from '../components/PantryCard';
 import HeaderBar from '../components/HeaderBar';
 import EmptyState from '../components/EmptyState';
-import UnlockBanner from '../components/UnlockBanner';
 import { useStore } from '../store';
 import { useAuth } from '../contexts/AuthContext';
 import ManualEntryScreen from './ManualEntryScreen';
@@ -165,11 +164,9 @@ const SampleFoodCard = ({ item }: { item: any }) => (
 );
 
 interface FoodScreenProps {
-  onLoginPress?: () => void;
-  onSignUpPress?: () => void;
 }
 
-export default function FoodScreen({ navigation, onLoginPress, onSignUpPress }: FoodScreenProps & any) {
+export default function FoodScreen({ navigation }: FoodScreenProps & any) {
   const { foodItems, getFoodItemsByLocation, deleteFoodItem, updateFoodItem, userProfile } = useStore();
   const { user, isAuthenticated } = useAuth();
   const [selected, setSelected] = useState<'fresh' | 'pantry'>('fresh');
@@ -336,13 +333,7 @@ export default function FoodScreen({ navigation, onLoginPress, onSignUpPress }: 
         </XStack>
       </View>
 
-      {/* Unlock Banner for Unauthenticated Users */}
-      {!isAuthenticated && (
-        <UnlockBanner
-          onLoginPress={onLoginPress}
-          onSignUpPress={onSignUpPress}
-        />
-      )}
+
 
       {/* Minimal Borderless Filter Bar with Counts, Horizontally Scrollable */}
       <YStack marginTop={4} marginBottom={8}>

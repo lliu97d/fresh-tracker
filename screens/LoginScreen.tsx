@@ -16,10 +16,9 @@ import { signIn } from '../services/firebase';
 interface LoginScreenProps {
   navigation: any;
   onLoginSuccess: () => void;
-  onGoBack?: () => void;
 }
 
-export default function LoginScreen({ navigation, onLoginSuccess, onGoBack }: LoginScreenProps) {
+export default function LoginScreen({ navigation, onLoginSuccess }: LoginScreenProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -68,13 +67,7 @@ export default function LoginScreen({ navigation, onLoginSuccess, onGoBack }: Lo
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Back Button */}
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => onGoBack ? onGoBack() : navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#6b7280" />
-        </TouchableOpacity>
+
 
         <View style={styles.header}>
           <Ionicons name="leaf" size={80} color="#22c55e" />

@@ -7,13 +7,11 @@ import { signOutUser } from '../services/firebase';
 import { Settings } from '@tamagui/lucide-icons';
 
 interface ProfileScreenProps {
-  onLoginPress?: () => void;
-  onSignUpPress?: () => void;
 }
 
 const { width } = Dimensions.get('window');
 
-export default function ProfileScreen({ navigation, onLoginPress, onSignUpPress }: ProfileScreenProps & any) {
+export default function ProfileScreen({ navigation }: ProfileScreenProps & any) {
   const { userProfile, updateUserProfile } = useStore();
   const { user, isAuthenticated } = useAuth();
 
@@ -79,57 +77,11 @@ export default function ProfileScreen({ navigation, onLoginPress, onSignUpPress 
 
   return (
     <View style={styles.container}>
-      
-      {!isAuthenticated ? (
-        // Unlock content for unauthenticated users
-        <ScrollView contentContainerStyle={styles.unlockContainer}>
-          <View style={styles.profileSection}>
-            <View style={styles.randomAvatarContainer}>
-              <Text style={styles.randomAvatar}>{randomProfilePic}</Text>
-              <TouchableOpacity style={styles.editIcon}>
-                <Text style={styles.editIconText}>✏️</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.userInfoSection}>
-              <View style={styles.userInfoContainer}>
-                <Text style={styles.userName}>Fresh User</Text>
-                <TouchableOpacity style={styles.editIcon}>
-                  <Text style={styles.editIconText}>✏️</Text>
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.userTagline}>Eat healthy</Text>
-              <View style={styles.calorieGoalButton}>
-                <Text style={styles.calorieGoalText}>2000 Cal / day</Text>
-              </View>
-            </View>
-          </View>
-          
-          <Text style={styles.unlockTitle}>Unlock Your Food Journey</Text>
-          <Text style={styles.unlockDescription}>
-            Sign in to track your own food items, get personalized recipes, and never waste food again!
-          </Text>
-          <View style={styles.unlockButtonContainer}>
-            <TouchableOpacity 
-              style={[styles.unlockButton, styles.signInButton]}
-              onPress={onLoginPress}
-            >
-              <Text style={styles.unlockButtonText}>Sign In</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.unlockButton, styles.signUpButton]}
-              onPress={onSignUpPress}
-            >
-              <Text style={styles.unlockButtonText}>Sign Up</Text>
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-      ) : (
-        // Authenticated user content
-        <ScrollView style={styles.scrollView}>
+      <ScrollView style={styles.scrollView}>
           {/* User Profile Section */}
           <View style={styles.profileSection}>
             <View style={styles.avatarContainer}>
-              <Image source={userProfile.avatar || require('../assets/icon.png')} style={styles.avatar} />
+              <Image source={require('../assets/icon.png')} style={styles.avatar} />
             </View>
             <View style={styles.userInfoSection}>
               <View style={styles.userInfoRow}>
@@ -187,9 +139,7 @@ export default function ProfileScreen({ navigation, onLoginPress, onSignUpPress 
             </View>
           )}
 
-
         </ScrollView>
-      )}
     </View>
   );
 }

@@ -29,7 +29,7 @@ const MOCK_USERS = [
 
 // Mock authentication state
 let currentUser: User | null = null;
-let authStateListeners: ((user: User | null) => void)[] = [];
+const authStateListeners: ((user: User | null) => void)[] = [];
 
 // Create mock User object
 const createMockUser = (userData: typeof MOCK_USERS[0]): User => ({

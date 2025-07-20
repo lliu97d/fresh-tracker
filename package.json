@@ -34,6 +34,7 @@
     "expo-barcode-scanner": "^13.0.1",
     "expo-blur": "^14.1.5",
     "expo-dev-client": "~5.2.4",
+    "expo-linear-gradient": "~14.1.5",
     "expo-status-bar": "~2.2.3",
     "firebase": "^11.10.0",
     "react": "19.0.0",
@@ -46,18 +47,27 @@
     "react-native-screens": "^4.11.1",
     "react-native-web": "^0.20.0",
     "tamagui": "^1.130.2",
-    "zustand": "^5.0.6",
-    "expo-linear-gradient": "~14.1.5"
+    "zustand": "^5.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@eslint/js": "^9.31.0",
     "@tamagui/babel-plugin": "^1.130.2",
     "@tamagui/cli": "^1.130.2",
     "@types/react": "~19.0.10",
     "@types/react-native": "^0.72.8",
+    "@typescript-eslint/eslint-plugin": "^8.37.0",
+    "@typescript-eslint/parser": "^8.37.0",
     "babel-plugin-transform-inline-environment-variables": "^0.4.4",
+    "eslint": "^9.31.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^16.3.0",
     "react-native-svg-transformer": "^1.5.1",
-    "typescript": "~5.8.3"
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.37.0"
   },
   "private": true
 }

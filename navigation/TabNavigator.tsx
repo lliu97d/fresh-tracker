@@ -16,25 +16,14 @@ import { Home, BookOpen, User } from '@tamagui/lucide-icons';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-interface TabNavigatorProps {
-  onLoginPress?: () => void;
-  onSignUpPress?: () => void;
-}
-
-function FoodStack({ onLoginPress, onSignUpPress }: TabNavigatorProps) {
-  // Memoize FoodScreen component to prevent inline function warnings
-  const FoodScreenComponent = useCallback((props: any) => (
-    <FoodScreen {...props} onLoginPress={onLoginPress} onSignUpPress={onSignUpPress} />
-  ), [onLoginPress, onSignUpPress]);
-
+function FoodStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen 
         name="FoodMain" 
+        component={FoodScreen}
         options={{ title: 'Food', headerShown: false }}
-      >
-        {FoodScreenComponent}
-      </Stack.Screen>
+      />
       <Stack.Screen name="BarcodeScanner" component={BarcodeScannerScreen} options={{ title: 'Scan Barcode' }} />
       <Stack.Screen name="ManualEntry" component={ManualEntryScreen} options={{ title: 'Manual Entry' }} />
     </Stack.Navigator>
@@ -50,36 +39,21 @@ function RecipesStack() {
   );
 }
 
-function ProfileStack({ onLoginPress, onSignUpPress }: TabNavigatorProps) {
-  // Memoize ProfileScreen component to prevent inline function warnings
-  const ProfileScreenComponent = useCallback((props: any) => (
-    <ProfileScreen {...props} onLoginPress={onLoginPress} onSignUpPress={onSignUpPress} />
-  ), [onLoginPress, onSignUpPress]);
-
+function ProfileStack() {
   return (
     <Stack.Navigator>
       <Stack.Screen 
         name="ProfileMain" 
+        component={ProfileScreen}
         options={{ title: 'Profile', headerShown: false }}
-      >
-        {ProfileScreenComponent}
-      </Stack.Screen>
+      />
       <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile', headerShown: false }} />
     </Stack.Navigator>
   );
 }
 
-export default function TabNavigator({ onLoginPress, onSignUpPress }: TabNavigatorProps) {
+export default function TabNavigator() {
   const insets = useSafeAreaInsets();
-  
-  // Memoize screen components to prevent inline function warnings
-  const FoodStackComponent = useCallback((props: any) => (
-    <FoodStack {...props} onLoginPress={onLoginPress} onSignUpPress={onSignUpPress} />
-  ), [onLoginPress, onSignUpPress]);
-
-  const ProfileStackComponent = useCallback((props: any) => (
-    <ProfileStack {...props} onLoginPress={onLoginPress} onSignUpPress={onSignUpPress} />
-  ), [onLoginPress, onSignUpPress]);
   
   return (
     <Tab.Navigator
@@ -128,13 +102,12 @@ export default function TabNavigator({ onLoginPress, onSignUpPress }: TabNavigat
     >
       <Tab.Screen 
         name="Food" 
+        component={FoodStack}
         options={{ 
           headerShown: false,
           tabBarLabel: 'Home',
         }} 
-      >
-        {FoodStackComponent}
-      </Tab.Screen>
+      />
       <Tab.Screen 
         name="Recipes" 
         component={RecipesStack}
@@ -145,13 +118,12 @@ export default function TabNavigator({ onLoginPress, onSignUpPress }: TabNavigat
       />
       <Tab.Screen 
         name="Profile" 
+        component={ProfileStack}
         options={{ 
           headerShown: false,
           tabBarLabel: 'Profile',
         }}
-      >
-        {ProfileStackComponent}
-      </Tab.Screen>
+      />
     </Tab.Navigator>
   );
 } 

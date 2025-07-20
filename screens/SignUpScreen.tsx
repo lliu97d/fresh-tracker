@@ -16,10 +16,9 @@ import { signUp } from '../services/firebase';
 interface SignUpScreenProps {
   navigation: any;
   onSignUpSuccess: () => void;
-  onGoBack?: () => void;
 }
 
-export default function SignUpScreen({ navigation, onSignUpSuccess, onGoBack }: SignUpScreenProps) {
+export default function SignUpScreen({ navigation, onSignUpSuccess }: SignUpScreenProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -96,7 +95,7 @@ export default function SignUpScreen({ navigation, onSignUpSuccess, onGoBack }: 
         {/* Back Button */}
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => onGoBack ? onGoBack() : navigation.goBack()}
+          onPress={() => navigation.goBack()}
         >
           <Ionicons name="arrow-back" size={24} color="#6b7280" />
         </TouchableOpacity>

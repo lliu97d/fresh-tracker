@@ -14,10 +14,9 @@ import { resetPassword } from '../services/firebase';
 
 interface ForgotPasswordScreenProps {
   navigation: any;
-  onGoBack?: () => void;
 }
 
-export default function ForgotPasswordScreen({ navigation, onGoBack }: ForgotPasswordScreenProps) {
+export default function ForgotPasswordScreen({ navigation }: ForgotPasswordScreenProps) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -64,7 +63,7 @@ export default function ForgotPasswordScreen({ navigation, onGoBack }: ForgotPas
       <View style={styles.content}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => onGoBack ? onGoBack() : navigation.goBack()}
+          onPress={() => navigation.goBack()}
         >
           <Ionicons name="arrow-back" size={24} color="#6b7280" />
         </TouchableOpacity>

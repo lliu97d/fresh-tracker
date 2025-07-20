@@ -8,14 +8,12 @@ import { TamaguiProvider } from 'tamagui';
 import config from './tamagui.config';
 import TabNavigator from './navigation/TabNavigator';
 import AuthNavigator from './navigation/AuthNavigator';
-import SampleFoodScreen from './screens/SampleFoodScreen';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { useStore } from './store';
 
 function AppContent() {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const { initializeStore, isLoading: storeLoading, isInitialized } = useStore();
-  const [showAuth, setShowAuth] = React.useState(false);
 
   React.useEffect(() => {
     if (!isInitialized) {
@@ -30,25 +28,11 @@ function AppContent() {
   const handleLoginSuccess = useCallback(() => {
     // User is now authenticated, store will be initialized
     // The app will automatically navigate to the Food screen (initial route)
-    setShowAuth(false);
-  }, [user]);
+  }, []);
 
   const handleSignUpSuccess = useCallback(() => {
     // User signed up successfully, store will be initialized
     // The app will automatically navigate to the Food screen (initial route)
-    setShowAuth(false);
-  }, [user]);
-
-  const handleLoginPress = useCallback(() => {
-    setShowAuth(true);
-  }, []);
-
-  const handleSignUpPress = useCallback(() => {
-    setShowAuth(true);
-  }, []);
-
-  const handleGoBack = useCallback(() => {
-    setShowAuth(false);
   }, []);
 
   // Show loading screen while auth or store is initializing
@@ -72,15 +56,14 @@ function AppContent() {
       <TamaguiProvider config={config}>
         <SafeAreaProvider>
           <NavigationContainer>
-            {showAuth ? (
+            {!isAuthenticated ? (
               <AuthNavigator 
                 onLoginSuccess={handleLoginSuccess}
                 onSignUpSuccess={handleSignUpSuccess}
-                onGoBack={handleGoBack}
               />
             ) : (
               <SafeAreaView style={{ flex: 1, backgroundColor: '#f3f4f6' }} edges={['top', 'bottom']}>
-                <TabNavigator onLoginPress={handleLoginPress} onSignUpPress={handleSignUpPress} />
+                <TabNavigator />
               </SafeAreaView>
             )}
           </NavigationContainer>

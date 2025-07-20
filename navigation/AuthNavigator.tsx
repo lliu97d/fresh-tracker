@@ -10,22 +10,21 @@ const Stack = createNativeStackNavigator();
 interface AuthNavigatorProps {
   onLoginSuccess: () => void;
   onSignUpSuccess: () => void;
-  onGoBack?: () => void;
 }
 
-export default function AuthNavigator({ onLoginSuccess, onSignUpSuccess, onGoBack }: AuthNavigatorProps) {
+export default function AuthNavigator({ onLoginSuccess, onSignUpSuccess }: AuthNavigatorProps) {
   // Memoize screen components to prevent inline function warnings
   const LoginScreenComponent = useCallback((props: any) => (
-    <LoginScreen {...props} onLoginSuccess={onLoginSuccess} onGoBack={onGoBack} />
-  ), [onLoginSuccess, onGoBack]);
+    <LoginScreen {...props} onLoginSuccess={onLoginSuccess} />
+  ), [onLoginSuccess]);
 
   const SignUpScreenComponent = useCallback((props: any) => (
-    <SignUpScreen {...props} onSignUpSuccess={onSignUpSuccess} onGoBack={onGoBack} />
-  ), [onSignUpSuccess, onGoBack]);
+    <SignUpScreen {...props} onSignUpSuccess={onSignUpSuccess} />
+  ), [onSignUpSuccess]);
 
   const ForgotPasswordScreenComponent = useCallback((props: any) => (
-    <ForgotPasswordScreen {...props} onGoBack={onGoBack} />
-  ), [onGoBack]);
+    <ForgotPasswordScreen {...props} />
+  ), []);
 
   return (
     <Stack.Navigator
