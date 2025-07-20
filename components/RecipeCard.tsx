@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { RecipeIngredient, FoodItem } from '../store/types';
+import { Clock, Flame, Users, CheckCircle, XCircle } from '@tamagui/lucide-icons';
 
 interface RecipeCardProps {
   name: string;
@@ -8,9 +9,19 @@ interface RecipeCardProps {
   time: string;
   ingredients: RecipeIngredient[];
   userInventory?: FoodItem[];
+  calories?: number;
+  servings?: number;
 }
 
-export default function RecipeCard({ name, cuisine, time, ingredients, userInventory = [] }: RecipeCardProps) {
+export default function RecipeCard({ 
+  name, 
+  cuisine, 
+  time, 
+  ingredients, 
+  userInventory = [],
+  calories = 0,
+  servings = 1
+}: RecipeCardProps) {
   // Helper function to check if ingredient is available
   const isIngredientAvailable = (ingredientName: string): boolean => {
     const cleanIngredientName = ingredientName.toLowerCase()
@@ -36,61 +47,85 @@ export default function RecipeCard({ name, cuisine, time, ingredients, userInven
   const missingIngredients = ingredients.filter(ing => !isIngredientAvailable(ing.name));
   const availabilityPercentage = Math.round((availableIngredients.length / ingredients.length) * 100);
 
-  // Determine card style based on availability
-  const getCardStyle = () => {
+  // Determine availability status
+  const getAvailabilityStatus = () => {
     if (availabilityPercentage >= 80) {
-      return [styles.card, styles.cardReady];
+      return { status: 'Ready', color: '#388E3C', backgroundColor: '#E8F5E8' };
     } else if (availabilityPercentage >= 50) {
-      return [styles.card, styles.cardPartial];
+      return { status: 'Partial', color: '#F59E0B', backgroundColor: '#FEF3C7' };
     } else {
-      return [styles.card, styles.cardNeedsMore];
+      return { status: 'Need More', color: '#EF5350', backgroundColor: '#FFEBEE' };
     }
   };
 
+  const availability = getAvailabilityStatus();
+
   return (
-    <View style={getCardStyle()}>
+    <View style={styles.card}>
+      {/* Header with title and availability status */}
       <View style={styles.headerRow}>
-        <View style={styles.titleSection}>
-          <Text style={styles.name}>{name}</Text>
-          <View style={[
-            styles.statusBadge,
-            availabilityPercentage >= 80 ? styles.statusReady :
-            availabilityPercentage >= 50 ? styles.statusPartial :
-            styles.statusNeedsMore
-          ]}>
-            <Text style={[
-              styles.statusText,
-              availabilityPercentage >= 80 ? styles.statusTextReady :
-              availabilityPercentage >= 50 ? styles.statusTextPartial :
-              styles.statusTextNeedsMore
-            ]}>
-              {availabilityPercentage >= 80 ? 'Ready' : availabilityPercentage >= 50 ? 'Partial' : 'Need More'}
-            </Text>
-          </View>
+        <Text style={styles.recipeName} numberOfLines={2}>
+          {name}
+        </Text>
+        <View style={[styles.availabilityBadge, { backgroundColor: availability.backgroundColor }]}>
+          <Text style={[styles.availabilityText, { color: availability.color }]}>
+            {availability.status}
+          </Text>
         </View>
-        <Text style={styles.cuisine}>{cuisine} • {time}</Text>
       </View>
-      
+
+      {/* Recipe metadata */}
+      <Text style={styles.cuisineInfo}>
+        {cuisine} • {time}
+      </Text>
+
+      {/* Recipe stats */}
+      <View style={styles.statsRow}>
+        <View style={styles.statItem}>
+          <Clock size={14} color="#388E3C" />
+          <Text style={styles.statText}>{time}</Text>
+        </View>
+        {calories > 0 && (
+          <View style={styles.statItem}>
+            <Flame size={14} color="#FF6B35" />
+            <Text style={styles.statText}>{calories} cal</Text>
+          </View>
+        )}
+        {servings > 1 && (
+          <View style={styles.statItem}>
+            <Users size={14} color="#388E3C" />
+            <Text style={styles.statText}>{servings} servings</Text>
+          </View>
+        )}
+      </View>
+
       {/* Ingredient availability summary */}
       <View style={styles.summaryRow}>
         <Text style={styles.summaryText}>
           {availableIngredients.length} of {ingredients.length} ingredients available 
-          ({Math.round((availableIngredients.length / ingredients.length) * 100)}%)
+          ({availabilityPercentage}%)
         </Text>
       </View>
       
-      <View style={styles.tagsRow}>
+      {/* Ingredients with pill shapes */}
+      <View style={styles.ingredientsContainer}>
         {/* Available ingredients */}
         {availableIngredients.map((ing, idx) => (
-          <View key={`available-${idx}`} style={styles.availableTag}>
-            <Text style={styles.availableTagText}>✓ {ing.name}</Text>
+          <View key={`available-${idx}`} style={styles.availablePill}>
+            <CheckCircle size={12} color="#388E3C" />
+            <Text style={styles.availablePillText}>
+              {ing.name} {ing.amount > 0 && `(${ing.amount} ${ing.unit})`}
+            </Text>
           </View>
         ))}
         
         {/* Missing ingredients */}
         {missingIngredients.map((ing, idx) => (
-          <View key={`missing-${idx}`} style={styles.missingTag}>
-            <Text style={styles.missingTagText}>✗ {ing.name}</Text>
+          <View key={`missing-${idx}`} style={styles.missingPill}>
+            <XCircle size={12} color="#EF5350" />
+            <Text style={styles.missingPillText}>
+              {ing.name} {ing.amount > 0 && `(${ing.amount} ${ing.unit})`}
+            </Text>
           </View>
         ))}
       </View>
@@ -100,133 +135,104 @@ export default function RecipeCard({ name, cuisine, time, ingredients, userInven
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#FFF',
     borderRadius: 16,
-    padding: 18,
-    marginBottom: 18,
+    padding: 16,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 },
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
+    elevation: 0,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 8,
   },
-  name: {
+  recipeName: {
     fontSize: 17,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: '#222',
     flex: 1,
-    flexWrap: 'wrap',
+    marginRight: 8,
   },
-  cuisine: {
-    fontSize: 13,
-    color: '#2563eb',
-    marginLeft: 8,
+  availabilityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
   },
-  tagsRow: {
+  availabilityText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  cuisineInfo: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+    marginBottom: 12,
+  },
+  statsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 4,
+    alignItems: 'center',
+    gap: 16,
+    marginBottom: 12,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statText: {
+    fontSize: 13,
+    color: '#666',
+    fontWeight: '500',
   },
   summaryRow: {
-    marginBottom: 8,
+    marginBottom: 12,
   },
   summaryText: {
     fontSize: 12,
     color: '#6b7280',
     fontStyle: 'italic',
   },
-  tag: {
-    backgroundColor: '#e0e7ff',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    marginRight: 8,
-    marginBottom: 6,
+  ingredientsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  tagText: {
-    fontSize: 13,
-    color: '#1e40af',
-  },
-  availableTag: {
-    backgroundColor: '#dcfce7',
-    borderRadius: 8,
+  availablePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#E8F5E8',
+    borderRadius: 16,
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    marginRight: 8,
-    marginBottom: 6,
+    paddingVertical: 6,
+    gap: 4,
     borderWidth: 1,
-    borderColor: '#22c55e',
+    borderColor: '#388E3C',
   },
-  availableTagText: {
-    fontSize: 13,
-    color: '#166534',
+  availablePillText: {
+    fontSize: 12,
+    color: '#388E3C',
     fontWeight: '500',
   },
-  missingTag: {
-    backgroundColor: '#fef2f2',
-    borderRadius: 8,
+  missingPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFEBEE',
+    borderRadius: 16,
     paddingHorizontal: 10,
-    paddingVertical: 4,
-    marginRight: 8,
-    marginBottom: 6,
+    paddingVertical: 6,
+    gap: 4,
     borderWidth: 1,
-    borderColor: '#ef4444',
+    borderColor: '#EF5350',
   },
-  missingTagText: {
-    fontSize: 13,
-    color: '#991b1b',
+  missingPillText: {
+    fontSize: 12,
+    color: '#EF5350',
     fontWeight: '500',
-  },
-  cardReady: {
-    borderColor: '#22c55e',
-    borderWidth: 2,
-  },
-  cardPartial: {
-    borderColor: '#f59e0b',
-    borderWidth: 2,
-  },
-  cardNeedsMore: {
-    borderColor: '#ef4444',
-    borderWidth: 2,
-  },
-  titleSection: {
-    flex: 1,
-  },
-  statusBadge: {
-    backgroundColor: '#f3f4f6',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-    marginTop: 4,
-  },
-  statusText: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  statusReady: {
-    backgroundColor: '#dcfce7',
-  },
-  statusPartial: {
-    backgroundColor: '#fef3c7',
-  },
-  statusNeedsMore: {
-    backgroundColor: '#fee2e2',
-  },
-  statusTextReady: {
-    color: '#166534',
-  },
-  statusTextPartial: {
-    color: '#92400e',
-  },
-  statusTextNeedsMore: {
-    color: '#991b1b',
   },
 }); 

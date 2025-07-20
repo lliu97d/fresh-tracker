@@ -98,6 +98,11 @@ interface AppState {
   saveToStorage: () => Promise<void>;
   clearAllData: () => Promise<void>;
   resetRecipes: () => Promise<void>;
+  
+  // Development helpers
+  loadMockRecipes: () => void;
+  useMockRecipes: boolean;
+  toggleMockRecipes: () => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -110,6 +115,7 @@ export const useStore = create<AppState>((set, get) => ({
   isLoading: true,
   isInitialized: false,
   isLoadingRecipes: false,
+  useMockRecipes: false,
   
   // Initialization
   initializeStore: async () => {
@@ -239,10 +245,33 @@ export const useStore = create<AppState>((set, get) => ({
   
   // Recipe API Actions
   fetchPersonalizedRecipes: async () => {
-    console.log('Fetching personalized recipes...');
+    const state = get();
+    
+    // Check if mock mode is enabled
+    if (state.useMockRecipes) {
+      console.log('🧪 Using mock recipes (mock mode enabled)');
+      set({ isLoadingRecipes: true });
+      
+      // Filter mock recipes based on available ingredients
+      const mockRecipesToUse = mockRecipes.filter(recipe => {
+        const availableIngredients = state.foodItems.map((item: FoodItem) => item.name.toLowerCase());
+        const recipeIngredients = recipe.ingredients.map(ing => ing.name.toLowerCase());
+        
+        return recipeIngredients.some(ingredient => 
+          availableIngredients.some((available: string) => 
+            available.includes(ingredient) || ingredient.includes(available)
+          )
+        );
+      });
+      
+      set({ recipes: mockRecipesToUse, isLoadingRecipes: false });
+      get().saveToStorage();
+      return mockRecipesToUse;
+    }
+    
+    console.log('Fetching personalized recipes from API...');
     set({ isLoadingRecipes: true });
     try {
-      const state = get();
       console.log('Current state:', {
         foodItemsCount: state.foodItems.length,
         dietaryPreferences: state.userProfile.dietPreferences,
@@ -270,12 +299,69 @@ export const useStore = create<AppState>((set, get) => ({
       return recipes;
     } catch (error) {
       console.error('Error fetching personalized recipes:', error);
-      set({ isLoadingRecipes: false });
-      return [];
+      console.log('🔄 Falling back to mock recipes for development...');
+      
+      // Use mock recipes when API fails
+      const currentState = get();
+      const mockRecipesToUse = mockRecipes.filter(recipe => {
+        // Filter recipes based on available ingredients
+        const availableIngredients = currentState.foodItems.map((item: FoodItem) => item.name.toLowerCase());
+        const recipeIngredients = recipe.ingredients.map(ing => ing.name.toLowerCase());
+        
+        // Check if recipe uses any available ingredients
+        return recipeIngredients.some(ingredient => 
+          availableIngredients.some((available: string) => 
+            available.includes(ingredient) || ingredient.includes(available)
+          )
+        );
+      });
+      
+      set((state) => ({
+        recipes: [...state.recipes, ...mockRecipesToUse],
+        isLoadingRecipes: false,
+      }));
+      
+      // Auto-save to storage
+      get().saveToStorage();
+      return mockRecipesToUse;
     }
   },
   
   searchRecipes: async (query, filters = {}) => {
+    const state = get();
+    
+    // Check if mock mode is enabled
+    if (state.useMockRecipes) {
+      console.log('🧪 Using mock recipes for search (mock mode enabled)');
+      set({ isLoadingRecipes: true });
+      
+      // Filter mock recipes based on search query
+      const mockRecipesToUse = mockRecipes.filter(recipe => {
+        const queryLower = query.toLowerCase();
+        const recipeNameLower = recipe.name.toLowerCase();
+        const cuisineLower = recipe.cuisine.toLowerCase();
+        
+        // Check if recipe matches search query
+        const matchesQuery = recipeNameLower.includes(queryLower) || 
+                           cuisineLower.includes(queryLower) ||
+                           recipe.tags?.some(tag => tag.toLowerCase().includes(queryLower));
+        
+        // Check cuisine filter
+        const matchesCuisine = !filters.cuisine || 
+                              recipe.cuisine.toLowerCase() === filters.cuisine.toLowerCase();
+        
+        return matchesQuery && matchesCuisine;
+      });
+      
+      set((state) => ({
+        recipes: [...state.recipes, ...mockRecipesToUse],
+        isLoadingRecipes: false,
+      }));
+      
+      get().saveToStorage();
+      return mockRecipesToUse;
+    }
+    
     set({ isLoadingRecipes: true });
     try {
       const recipes = await recipeAPI.searchRecipes(
@@ -297,8 +383,34 @@ export const useStore = create<AppState>((set, get) => ({
       return recipes;
     } catch (error) {
       console.error('Error searching recipes:', error);
-      set({ isLoadingRecipes: false });
-      return [];
+      console.log('🔄 Falling back to mock recipes for search...');
+      
+      // Use mock recipes when API fails
+      const mockRecipesToUse = mockRecipes.filter(recipe => {
+        const queryLower = query.toLowerCase();
+        const recipeNameLower = recipe.name.toLowerCase();
+        const cuisineLower = recipe.cuisine.toLowerCase();
+        
+        // Check if recipe matches search query
+        const matchesQuery = recipeNameLower.includes(queryLower) || 
+                           cuisineLower.includes(queryLower) ||
+                           recipe.tags?.some(tag => tag.toLowerCase().includes(queryLower));
+        
+        // Check cuisine filter
+        const matchesCuisine = !filters.cuisine || 
+                              recipe.cuisine.toLowerCase() === filters.cuisine.toLowerCase();
+        
+        return matchesQuery && matchesCuisine;
+      });
+      
+      set((state) => ({
+        recipes: [...state.recipes, ...mockRecipesToUse],
+        isLoadingRecipes: false,
+      }));
+      
+      // Auto-save to storage
+      get().saveToStorage();
+      return mockRecipesToUse;
     }
   },
   
@@ -309,14 +421,41 @@ export const useStore = create<AppState>((set, get) => ({
   },
   
   forceReloadRecipes: async () => {
-    console.log('🔄 Force reloading recipes...');
+    const state = get();
+    
+    // Check if mock mode is enabled
+    if (state.useMockRecipes) {
+      console.log('🔄 Force reloading mock recipes...');
+      set({ recipes: [], isLoadingRecipes: true });
+      
+      // Clear recipes from storage to ensure fresh load
+      await clearRecipesFromStorage();
+      
+      // Filter mock recipes based on available ingredients
+      const mockRecipesToUse = mockRecipes.filter(recipe => {
+        const availableIngredients = state.foodItems.map((item: FoodItem) => item.name.toLowerCase());
+        const recipeIngredients = recipe.ingredients.map(ing => ing.name.toLowerCase());
+        
+        return recipeIngredients.some(ingredient => 
+          availableIngredients.some((available: string) => 
+            available.includes(ingredient) || ingredient.includes(available)
+          )
+        );
+      });
+      
+      console.log('📋 Mock force reload returned:', mockRecipesToUse.length, 'recipes');
+      set({ recipes: mockRecipesToUse, isLoadingRecipes: false });
+      get().saveToStorage();
+      return mockRecipesToUse;
+    }
+    
+    console.log('🔄 Force reloading recipes from API...');
     set({ recipes: [], isLoadingRecipes: true });
     
     // Clear recipes from storage to ensure fresh load
     await clearRecipesFromStorage();
     
     try {
-      const state = get();
       const recipes = await recipeAPI.getPersonalizedSuggestions(
         state.foodItems,
         state.userProfile.dietPreferences,
@@ -331,8 +470,26 @@ export const useStore = create<AppState>((set, get) => ({
       return recipes;
     } catch (error) {
       console.error('❌ Error force reloading recipes:', error);
-      set({ isLoadingRecipes: false });
-      return [];
+      console.log('🔄 Falling back to mock recipes for force reload...');
+      
+      // Use mock recipes when API fails
+      const currentState = get();
+      const mockRecipesToUse = mockRecipes.filter(recipe => {
+        // Filter recipes based on available ingredients
+        const availableIngredients = currentState.foodItems.map((item: FoodItem) => item.name.toLowerCase());
+        const recipeIngredients = recipe.ingredients.map(ing => ing.name.toLowerCase());
+        
+        // Check if recipe uses any available ingredients
+        return recipeIngredients.some(ingredient => 
+          availableIngredients.some((available: string) => 
+            available.includes(ingredient) || ingredient.includes(available)
+          )
+        );
+      });
+      
+      set({ recipes: mockRecipesToUse, isLoadingRecipes: false });
+      get().saveToStorage();
+      return mockRecipesToUse;
     }
   },
   
@@ -501,5 +658,30 @@ export const useStore = create<AppState>((set, get) => ({
     console.log('🔄 Resetting recipes...');
     await clearRecipesFromStorage();
     set({ recipes: [] });
+  },
+  
+  // Development helpers
+  loadMockRecipes: () => {
+    console.log('🧪 Loading mock recipes for development...');
+    set({ recipes: mockRecipes });
+    get().saveToStorage();
+  },
+  
+  toggleMockRecipes: () => {
+    const currentState = get();
+    const newMockMode = !currentState.useMockRecipes;
+    console.log('🔄 Toggling mock recipes mode:', newMockMode ? 'ON' : 'OFF');
+    
+    set({ useMockRecipes: newMockMode });
+    
+    // If switching to mock mode, load mock recipes
+    if (newMockMode) {
+      set({ recipes: mockRecipes });
+    } else {
+      // If switching to API mode, clear recipes to force API reload
+      set({ recipes: [] });
+    }
+    
+    get().saveToStorage();
   },
 })); 

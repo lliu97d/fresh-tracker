@@ -121,6 +121,26 @@ See `testing/README.md` for detailed test documentation.
 2. Update the API key in `services/recipeAPI.ts`
 3. See `RECIPE_API_SETUP.md` for detailed instructions
 
+### Development with Mock Recipes
+
+When the recipe API is not working or for development purposes, the app automatically falls back to mock recipes:
+
+**Automatic Fallback:**
+- When API calls fail, the app automatically loads mock recipes
+- Mock recipes are filtered based on available ingredients in your inventory
+- Search functionality works with mock data
+
+**Manual Mock Recipe Loading:**
+- Use the StoreDebug component (available in development builds)
+- Click "Load Mock Recipes" to manually load all mock recipes
+- Useful for testing the recipe UI without API dependencies
+
+**Mock Recipe Features:**
+- 15 diverse recipes across multiple cuisines
+- Realistic ingredients and cooking instructions
+- Proper calorie and serving information
+- Ingredient availability checking with your inventory
+
 ## Development
 
 ### Key Features Implemented

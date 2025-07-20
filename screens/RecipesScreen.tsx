@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert, Switch } from 'react-native';
 import RecipeCard from '../components/RecipeCard';
 import { Ionicons } from '@expo/vector-icons';
 import HeaderBar from '../components/HeaderBar';
@@ -94,11 +94,11 @@ export default function RecipesScreen({ navigation }: any) {
     recipes, 
     fetchPersonalizedRecipes, 
     searchRecipes, 
-    clearRecipes,
     forceReloadRecipes,
-    resetRecipes,
     isLoadingRecipes,
-    foodItems 
+    foodItems,
+    useMockRecipes,
+    toggleMockRecipes
   } = useStore();
   const { isAuthenticated } = useAuth();
   
@@ -146,9 +146,31 @@ export default function RecipesScreen({ navigation }: any) {
   const apiStatus = isAuthenticated ? recipeAPI.getApiStatus() : null;
 
   return (
-    <View style={{ flex: 1 }}>
-      <HeaderBar title="Recipes" />
-      
+    <View style={styles.container}>
+      {/* Modern Header with Dynamic Greeting */}
+      <View style={styles.header}>
+        <Text style={styles.greeting}>
+          {!isAuthenticated 
+            ? 'Discover Delicious Recipes'
+            : 'Your Recipe Collection'
+          }
+        </Text>
+        <Text style={styles.subtitle}>
+          {!isAuthenticated 
+            ? 'Explore what FreshTracker can do for you'
+            : hasExpiringItems 
+              ? 'Smart suggestions based on your ingredients'
+              : 'Discover recipes tailored to your preferences'
+          }
+        </Text>
+        {isAuthenticated && useMockRecipes && (
+          <View style={styles.mockModeIndicator}>
+            <Ionicons name="flask" size={14} color="#388E3C" />
+            <Text style={styles.mockModeIndicatorText}>Mock Mode Active</Text>
+          </View>
+        )}
+      </View>
+
       {/* Search Bar */}
       <View style={styles.searchContainer}>
         <TextInput
@@ -171,76 +193,58 @@ export default function RecipesScreen({ navigation }: any) {
       <View style={styles.actionRow}>
         <View style={styles.actionButtonsContainer}>
           {isAuthenticated && (
-            <>
-              <TouchableOpacity
-                style={styles.actionButton}
-                onPress={forceReloadRecipes}
-                disabled={isLoadingRecipes}
-              >
-                <Ionicons name="refresh" size={20} color="#2563eb" />
-                <Text style={styles.actionButtonText}>Refresh</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.actionButton, styles.clearButton]}
-                onPress={() => {
-                  clearRecipes();
-                  forceReloadRecipes();
-                }}
-                disabled={isLoadingRecipes}
-              >
-                <Ionicons name="trash-outline" size={20} color="#dc2626" />
-                <Text style={[styles.actionButtonText, styles.clearButtonText]}>Clear</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.actionButton, styles.resetButton]}
-                onPress={async () => {
-                  await resetRecipes();
-                  forceReloadRecipes();
-                }}
-                disabled={isLoadingRecipes}
-              >
-                <Ionicons name="refresh-circle-outline" size={20} color="#059669" />
-                <Text style={[styles.actionButtonText, styles.resetButtonText]}>Reset</Text>
-              </TouchableOpacity>
-            </>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={forceReloadRecipes}
+              disabled={isLoadingRecipes}
+            >
+              <Ionicons name="refresh" size={16} color="#388E3C" />
+              <Text style={styles.actionButtonText}>Refresh</Text>
+            </TouchableOpacity>
           )}
         </View>
         
-        <TouchableOpacity
-          style={styles.iconBtn}
-          onPress={() => navigation.navigate('Calendar')}
-          accessibilityLabel="Open Calendar"
-        >
-          <Ionicons name="calendar-outline" size={28} color="#2563eb" />
-        </TouchableOpacity>
+        <View style={styles.rightActions}>
+          {/* Mock Mode Switch - Only show for authenticated users */}
+          {isAuthenticated && (
+            <View style={styles.mockModeContainer}>
+              <Text style={styles.mockModeLabel}>Mock</Text>
+              <Switch
+                value={useMockRecipes}
+                onValueChange={toggleMockRecipes}
+                trackColor={{ false: '#e5e7eb', true: '#388E3C' }}
+                thumbColor={useMockRecipes ? '#ffffff' : '#f3f4f6'}
+                ios_backgroundColor="#e5e7eb"
+              />
+            </View>
+          )}
+          
+          <TouchableOpacity
+            style={styles.calendarButton}
+            onPress={() => navigation.navigate('Calendar')}
+            accessibilityLabel="Open Calendar"
+          >
+            <Ionicons name="calendar-outline" size={24} color="#388E3C" />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {displayLoading ? (
           <LoadingSpinner />
         ) : (
           <>
-            <View style={styles.noteBox}>
-              <Text style={styles.noteText}>
-                {!isAuthenticated 
-                  ? '🍳 Sample recipes to show you what FreshTracker can do!'
-                  : hasExpiringItems 
-                    ? '🍳 Smart suggestions based on your expiring items and preferences!'
-                    : '🍳 Discover delicious recipes tailored to your preferences!'
-                }
-              </Text>
-              {apiStatus && !apiStatus.available && (
-                <Text style={[styles.noteText, { color: '#e65100', fontSize: 12, marginTop: 8 }]}>
-                  ⚠️ {apiStatus.message}
-                </Text>
-              )}
-            </View>
+            {/* Status Note */}
+            {apiStatus && !apiStatus.available && (
+              <View style={styles.warningBox}>
+                <Ionicons name="warning-outline" size={16} color="#e65100" />
+                <Text style={styles.warningText}>{apiStatus.message}</Text>
+              </View>
+            )}
             
             {displayRecipes.length === 0 ? (
               <View style={styles.emptyState}>
-                <Ionicons name="restaurant-outline" size={48} color="#ccc" />
+                <Ionicons name="restaurant-outline" size={56} color="#BFD7ED" />
                 <Text style={styles.emptyStateText}>No recipes found</Text>
                 <Text style={styles.emptyStateSubtext}>
                   {isAuthenticated 
@@ -250,9 +254,11 @@ export default function RecipesScreen({ navigation }: any) {
                 </Text>
               </View>
             ) : (
-              displayRecipes.map((recipe) => (
-                <RecipeCard key={recipe.id} {...recipe} userInventory={isAuthenticated ? foodItems : []} />
-              ))
+              <View style={styles.recipesContainer}>
+                {displayRecipes.map((recipe) => (
+                  <RecipeCard key={recipe.id} {...recipe} userInventory={isAuthenticated ? foodItems : []} />
+                ))}
+              </View>
             )}
           </>
         )}
@@ -262,30 +268,81 @@ export default function RecipesScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#F6F7FB',
+  },
+  header: {
+    backgroundColor: '#F6F7FB',
+    paddingTop: 36,
+    paddingBottom: 8,
+    paddingHorizontal: 20,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    alignItems: 'flex-start',
+  },
+  greeting: {
+    fontSize: 26,
+    fontWeight: '700',
+    color: '#222',
+    marginBottom: 8,
+  },
+  subtitle: {
+    fontSize: 16,
+    fontWeight: '400',
+    color: '#666',
+    marginBottom: 8,
+  },
+  mockModeIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#E8F5E8',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginTop: 4,
+  },
+  mockModeIndicatorText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#388E3C',
+  },
   searchContainer: {
     flexDirection: 'row',
     paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 8,
+    paddingTop: 8,
+    paddingBottom: 12,
     gap: 8,
   },
   searchInput: {
     flex: 1,
     height: 44,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#e5e7eb',
     borderRadius: 22,
     paddingHorizontal: 16,
     fontSize: 16,
     backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 1,
   },
   searchButton: {
     width: 44,
     height: 44,
-    backgroundColor: '#2563eb',
+    backgroundColor: '#388E3C',
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
+    elevation: 2,
   },
   actionRow: {
     flexDirection: 'row',
@@ -293,7 +350,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: 8,
-    marginBottom: 0,
+    marginBottom: 16,
   },
   actionButtonsContainer: {
     flexDirection: 'row',
@@ -305,62 +362,92 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 16,
-    backgroundColor: '#f0f9ff',
+    backgroundColor: '#E8F5E8',
     gap: 6,
   },
   actionButtonText: {
-    color: '#2563eb',
+    color: '#388E3C',
     fontSize: 14,
     fontWeight: '500',
   },
   clearButton: {
-    backgroundColor: '#fef2f2',
+    backgroundColor: '#FFEBEE',
   },
   clearButtonText: {
-    color: '#dc2626',
+    color: '#EF5350',
   },
   resetButton: {
-    backgroundColor: '#ecfdf5',
+    backgroundColor: '#E0F2F1',
   },
   resetButtonText: {
     color: '#059669',
   },
-  iconBtn: {
-    padding: 6,
+  rightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  mockModeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F8F9FA',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  mockModeLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+  },
+  calendarButton: {
+    padding: 8,
     borderRadius: 20,
+    backgroundColor: '#E8F5E8',
   },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 60,
+  scrollView: {
+    flex: 1,
   },
-  noteBox: {
-    backgroundColor: '#e0f2fe',
-    borderRadius: 10,
+  warningBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF3E0',
+    borderRadius: 12,
     padding: 12,
-    marginBottom: 18,
-    marginTop: 16,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    gap: 8,
   },
-  noteText: {
-    color: '#0369a1',
+  warningText: {
+    color: '#e65100',
     fontSize: 14,
+    flex: 1,
+  },
+  recipesContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 60,
   },
   emptyState: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 60,
+    paddingHorizontal: 20,
   },
   emptyStateText: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
-    color: '#666',
+    color: '#222',
     marginTop: 16,
     marginBottom: 8,
   },
   emptyStateSubtext: {
-    fontSize: 14,
-    color: '#999',
+    fontSize: 15,
+    color: '#666',
     textAlign: 'center',
-    paddingHorizontal: 20,
+    lineHeight: 22,
   },
 });
 
