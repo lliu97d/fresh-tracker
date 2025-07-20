@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Button, Image, Modal, TextInput, TouchableOpacity, ScrollView, Alert, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert, Dimensions, Image } from 'react-native';
 import HeaderBar from '../components/HeaderBar';
 import { useStore } from '../store';
 import { useAuth } from '../contexts/AuthContext';
@@ -16,8 +16,7 @@ const { width } = Dimensions.get('window');
 export default function ProfileScreen({ navigation, onLoginPress, onSignUpPress }: ProfileScreenProps & any) {
   const { userProfile, updateUserProfile } = useStore();
   const { user, isAuthenticated } = useAuth();
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editUser, setEditUser] = useState(userProfile);
+
   const [randomProfilePic, setRandomProfilePic] = useState('');
   const [activeTab, setActiveTab] = useState<'weight' | 'nutrition'>('nutrition');
 
@@ -34,34 +33,9 @@ export default function ProfileScreen({ navigation, onLoginPress, onSignUpPress 
     }
   }, [isAuthenticated]);
 
-  const handleSave = () => {
-    updateUserProfile(editUser);
-    setModalVisible(false);
-  };
 
-  const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const { error } = await signOutUser();
-              if (error) {
-                Alert.alert('Error', 'Failed to logout. Please try again.');
-              }
-            } catch (error) {
-              Alert.alert('Error', 'An unexpected error occurred.');
-            }
-          },
-        },
-      ]
-    );
-  };
+
+
 
   const renderWeightGraph = () => {
     return (
@@ -162,12 +136,12 @@ export default function ProfileScreen({ navigation, onLoginPress, onSignUpPress 
                 <View style={styles.userInfoContainer}>
                   <Text style={styles.userName}>{userProfile.name}</Text>
                 </View>
-                <TouchableOpacity 
-                  style={styles.settingsIcon} 
-                  onPress={() => { setEditUser(userProfile); setModalVisible(true); }}
-                >
-                  <Settings size={20} color="#6b7280" />
-                </TouchableOpacity>
+                            <TouchableOpacity 
+              style={styles.settingsIcon} 
+              onPress={() => navigation.navigate('EditProfile')}
+            >
+              <Settings size={20} color="#6b7280" />
+            </TouchableOpacity>
               </View>
               <Text style={styles.userTagline}>Eat healthy</Text>
               <View style={styles.calorieGoalButton}>
@@ -213,70 +187,9 @@ export default function ProfileScreen({ navigation, onLoginPress, onSignUpPress 
             </View>
           )}
 
-          {/* Action Buttons */}
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.editButton} onPress={() => { setEditUser(userProfile); setModalVisible(true); }}>
-              <Text style={styles.editButtonText}>Edit Profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-              <Text style={styles.logoutButtonText}>Logout</Text>
-            </TouchableOpacity>
-          </View>
+
         </ScrollView>
       )}
-
-      {/* Edit Modal */}
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Edit Profile</Text>
-            <ScrollView>
-              <TextInput
-                style={styles.input}
-                value={editUser.name}
-                onChangeText={name => setEditUser({ ...editUser, name })}
-                placeholder="Name"
-              />
-              <TextInput
-                style={styles.input}
-                value={editUser.email}
-                onChangeText={email => setEditUser({ ...editUser, email })}
-                placeholder="Email"
-                keyboardType="email-address"
-              />
-              <TextInput
-                style={styles.input}
-                value={editUser.dietPreferences.join(', ')}
-                onChangeText={text => setEditUser({ ...editUser, dietPreferences: text.split(',').map(s => s.trim()) })}
-                placeholder="Diet Preferences (comma separated)"
-              />
-              <TextInput
-                style={styles.input}
-                value={editUser.favoriteCuisine}
-                onChangeText={favoriteCuisine => setEditUser({ ...editUser, favoriteCuisine })}
-                placeholder="Favorite Cuisine"
-              />
-              <TextInput
-                style={styles.input}
-                value={editUser.allergies.join(', ')}
-                onChangeText={text => setEditUser({ ...editUser, allergies: text.split(',').map(s => s.trim()) })}
-                placeholder="Allergies (comma separated)"
-              />
-              <TextInput
-                style={styles.input}
-                value={editUser.calorieGoal.toString()}
-                onChangeText={calorieGoal => setEditUser({ ...editUser, calorieGoal: parseInt(calorieGoal) || 0 })}
-                placeholder="Daily Calorie Goal"
-                keyboardType="numeric"
-              />
-            </ScrollView>
-            <View style={styles.modalButtons}>
-              <Button title="Cancel" onPress={() => setModalVisible(false)} />
-              <Button title="Save" onPress={handleSave} />
-            </View>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -497,69 +410,7 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     marginBottom: 8,
   },
-  actionButtons: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-  },
-  editButton: {
-    backgroundColor: '#1e40af',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  editButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  logoutButton: {
-    backgroundColor: '#ef4444',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalContent: {
-    width: '90%',
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    color: '#1e40af',
-    textAlign: 'center',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
-    fontSize: 16,
-    backgroundColor: '#f9fafb',
-  },
-  modalButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 12,
-  },
+
   unlockContainer: {
     flex: 1,
     alignItems: 'center',

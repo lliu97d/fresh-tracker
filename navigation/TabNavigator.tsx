@@ -7,6 +7,7 @@ import FoodScreen from '../screens/FreshFoodsScreen';
 import RecipesScreen from '../screens/RecipesScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
 import BarcodeScannerScreen from '../screens/BarcodeScannerScreen';
 import ManualEntryScreen from '../screens/ManualEntryScreen';
 import { Ionicons } from '@expo/vector-icons';
@@ -49,6 +50,25 @@ function RecipesStack() {
   );
 }
 
+function ProfileStack({ onLoginPress, onSignUpPress }: TabNavigatorProps) {
+  // Memoize ProfileScreen component to prevent inline function warnings
+  const ProfileScreenComponent = useCallback((props: any) => (
+    <ProfileScreen {...props} onLoginPress={onLoginPress} onSignUpPress={onSignUpPress} />
+  ), [onLoginPress, onSignUpPress]);
+
+  return (
+    <Stack.Navigator>
+      <Stack.Screen 
+        name="ProfileMain" 
+        options={{ title: 'Profile', headerShown: false }}
+      >
+        {ProfileScreenComponent}
+      </Stack.Screen>
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={{ title: 'Edit Profile', headerShown: false }} />
+    </Stack.Navigator>
+  );
+}
+
 export default function TabNavigator({ onLoginPress, onSignUpPress }: TabNavigatorProps) {
   const insets = useSafeAreaInsets();
   
@@ -57,8 +77,8 @@ export default function TabNavigator({ onLoginPress, onSignUpPress }: TabNavigat
     <FoodStack {...props} onLoginPress={onLoginPress} onSignUpPress={onSignUpPress} />
   ), [onLoginPress, onSignUpPress]);
 
-  const ProfileScreenComponent = useCallback((props: any) => (
-    <ProfileScreen {...props} onLoginPress={onLoginPress} onSignUpPress={onSignUpPress} />
+  const ProfileStackComponent = useCallback((props: any) => (
+    <ProfileStack {...props} onLoginPress={onLoginPress} onSignUpPress={onSignUpPress} />
   ), [onLoginPress, onSignUpPress]);
   
   return (
@@ -130,7 +150,7 @@ export default function TabNavigator({ onLoginPress, onSignUpPress }: TabNavigat
           tabBarLabel: 'Profile',
         }}
       >
-        {ProfileScreenComponent}
+        {ProfileStackComponent}
       </Tab.Screen>
     </Tab.Navigator>
   );
